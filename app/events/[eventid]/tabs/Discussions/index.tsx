@@ -153,6 +153,18 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
       likes: 132,
       comments: 15,
     },
+    {
+      title: 'Post 2',
+      body: 'Post 2',
+      author: {
+        name: 'Author 1',
+        image: 'https://picsum.photos/200/300',
+      },
+      date: '2024-09-01',
+      tags: ['Tag 3', 'Tag 4'],
+      likes: 322,
+      comments: 105,
+    },
   ];
 
   const handleTopicClick = (topic: string) => {

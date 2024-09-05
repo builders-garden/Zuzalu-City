@@ -84,7 +84,7 @@ const PostCard = ({
               }}
             />
           )}
-          <Stack flex={1} justifyContent="space-between">
+          <Stack flex={1} justifyContent="space-between" gap={2}>
             <Stack direction="row" spacing="8px" alignItems="center">
               <Avatar
                 src={author.image}
@@ -99,12 +99,18 @@ const PostCard = ({
                 {daysAgo}
               </Typography>
             </Stack>
-            <Typography variant="h6" gutterBottom>
-              {title}
-            </Typography>
-            <Typography variant="body2" color="grey.500">
-              {body.length > 358 ? `${body.slice(0, 358)}...` : body}
-            </Typography>
+            <Stack direction="column" gap={0}>
+              <Typography variant="h6" gutterBottom>
+                {title}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="grey.500"
+                sx={{ minHeight: '55px' }}
+              >
+                {body.length > 358 ? `${body.slice(0, 358)}...` : body}
+              </Typography>
+            </Stack>
             <Stack
               direction="row"
               justifyContent="space-between"
