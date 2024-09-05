@@ -84,6 +84,7 @@ import { ArrowUpOnSquareIcon } from './ArrowUpOnSquare';
 import { FireIcon } from './Fire';
 import { ArrowUpCircleIcon } from './ArrowUpCircle';
 import { SparklesIcon } from './Sparkles';
+import { FlagIcon } from './Flag';
 
 export {
   HomeIcon,
@@ -165,6 +166,7 @@ export {
   ArrowDownSquare,
   HeartIcon,
   FingerPrintIcon,
+  FlagIcon,
   FireIcon,
   QueueListIcon,
   ChevronDoubleRightIcon,

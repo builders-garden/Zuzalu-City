@@ -12,6 +12,8 @@ import {
 import TopicChip from './TopicChip';
 import { CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import Link from 'next/link';
+import MarkdownVisualizer from './MarkdownVisualizer';
 
 const CardContentCustom = styled(CardContent)(({ theme }) => ({
   padding: '10px',
@@ -20,7 +22,9 @@ const CardContentCustom = styled(CardContent)(({ theme }) => ({
   },
 }));
 
-interface PostCardProps {
+export interface PostCardProps {
+  eventId: string;
+  id: string;
   title: string;
   body: string;
   author: {
@@ -31,10 +35,12 @@ interface PostCardProps {
   tags: string[];
   image?: string;
   likes: number;
-  comments: number;
+  replies: number;
 }
 
 const PostCard = ({
+  eventId,
+  id,
   title,
   body,
   author,
@@ -42,7 +48,7 @@ const PostCard = ({
   tags,
   image,
   likes,
-  comments,
+  replies,
 }: PostCardProps) => {
   const getDaysAgo = (dateString: string): string => {
     const postDate = new Date(dateString);
@@ -100,16 +106,26 @@ const PostCard = ({
               </Typography>
             </Stack>
             <Stack direction="column" gap={0}>
-              <Typography variant="h6" gutterBottom>
-                {title}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="grey.500"
-                sx={{ minHeight: '55px' }}
+              <Link
+                href={`/events/${eventId}?discussionId=${id}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
               >
-                {body.length > 358 ? `${body.slice(0, 358)}...` : body}
-              </Typography>
+                <Typography variant="h6" gutterBottom>
+                  {title}
+                </Typography>
+              </Link>
+              <Box sx={{ minHeight: '55px', color: 'grey.500' }}>
+                <MarkdownVisualizer
+                  content={
+                    body.length > 200 ? `${body.slice(0, 200)}...` : body
+                  }
+                />
+              </Box>
             </Stack>
             <Stack
               direction="row"
@@ -136,7 +152,7 @@ const PostCard = ({
                 />
                 <PostButton
                   icon={<ChatBubbleIcon size={4} />}
-                  label={`${comments}`}
+                  label={`${replies}`}
                   onClick={() => {}}
                 />
                 <PostButton

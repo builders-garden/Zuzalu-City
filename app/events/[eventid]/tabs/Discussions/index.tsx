@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from 'react';
 import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   Stack,
   Box,
@@ -31,6 +32,7 @@ import getLatLngFromAddress from '@/utils/osm';
 import TopicChip from './TopicChip';
 import SortChip from './SortChip';
 import PostCard from './PostCard';
+import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
 
 interface IDiscussions {
   eventData: Event | undefined;
@@ -141,8 +143,33 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
 
   const posts = [
     {
+      id: '1',
       title: 'Post 1',
-      body: 'Post 1',
+      body: `
+# Welcome to our Event!
+
+![Event Banner](https://picsum.photos/900/700)
+
+We're excited to have you join us for this amazing event. Here are some highlights:
+
+- Keynote speakers
+- Interactive workshops
+- Networking opportunities
+
+## Schedule
+
+| Time | Activity |
+|------|----------|
+| 9:00 AM | Registration |
+| 10:00 AM | Opening Ceremony |
+| 11:00 AM | Keynote Speech |
+
+Don't forget to check out our sponsor booths!
+
+![Sponsor Area](https://picsum.photos/800/400)
+
+See you there!
+    `,
       author: {
         name: 'Author 1',
         image: 'https://picsum.photos/200/300',
@@ -151,9 +178,11 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
       tags: ['Tag 1', 'Tag 2'],
       image: 'https://picsum.photos/200/300',
       likes: 132,
-      comments: 15,
+      replies: 15,
+      eventId: eventId,
     },
     {
+      id: '2',
       title: 'Post 2',
       body: 'Post 2',
       author: {
@@ -163,7 +192,8 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
       date: '2024-09-01',
       tags: ['Tag 3', 'Tag 4'],
       likes: 322,
-      comments: 105,
+      replies: 105,
+      eventId: eventId,
     },
   ];
 
@@ -180,6 +210,10 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
   const handleSortClick = (sort: string) => {
     setSelectedSort(sort);
   };
+
+  const searchParams = useSearchParams();
+  const discussionId = searchParams.get('discussionId');
+  const selectedDiscussion = posts.find((post) => post.id === discussionId);
 
   return (
     <Stack
@@ -208,7 +242,7 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
               gap: '20px',
             },
             [breakpoints.down('sm')]: {
-              paddingTop: '1px',
+              paddingTop: '5px',
             },
           }}
         >
@@ -216,7 +250,7 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
             spacing="30px"
             boxSizing={'border-box'}
             sx={{
-              px: '320px',
+              px: '240px',
               [breakpoints.down('lg')]: {
                 px: '120px',
               },
@@ -228,92 +262,101 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
               },
             }}
           >
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography variant="h4">Discussions</Typography>
-              <ZuButton
-                variant="outlined"
-                size="small"
-                startIcon={<PlusCircleIcon size={5} />}
-              >
-                New Post
-              </ZuButton>
-            </Stack>
-
-            <Stack
-              spacing="10px"
-              direction="row"
-              justifyContent="space-between"
-            >
-              <Typography variant="body1">Topics</Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '10px',
-                }}
-              >
-                {topics.map((topic) => (
-                  <TopicChip
-                    key={topic}
-                    label={topic}
-                    onClick={() => handleTopicClick(topic)}
-                    selected={selectedTopics.includes(topic)}
-                  />
-                ))}
-              </Box>
-            </Stack>
-
-            <Stack spacing="10px">
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '10px',
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    lineHeight: '160%',
-                  }}
+            {discussionId && selectedDiscussion ? (
+              <DiscussionDetails
+                discussion={selectedDiscussion}
+                eventId={eventId}
+              />
+            ) : (
+              <>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
                 >
-                  Sort by
-                </Typography>
-                <SortChip
-                  label="Hot"
-                  selected={selectedSort === 'Hot'}
-                  onClick={() => handleSortClick('Hot')}
-                  icon={<FireIcon size={4} />}
-                />
-                <SortChip
-                  label="Top"
-                  selected={selectedSort === 'Top'}
-                  onClick={() => handleSortClick('Top')}
-                  icon={<ArrowUpCircleIcon size={4} />}
-                />
-                <SortChip
-                  label="New"
-                  selected={selectedSort === 'New'}
-                  onClick={() => handleSortClick('New')}
-                  icon={<SparklesIcon size={4} />}
-                />
-              </Box>
-            </Stack>
+                  <Typography variant="h4">Discussions</Typography>
+                  <ZuButton
+                    variant="outlined"
+                    size="small"
+                    startIcon={<PlusCircleIcon size={5} />}
+                  >
+                    New Post
+                  </ZuButton>
+                </Stack>
 
-            <Stack direction="column" spacing="10px">
-              <Typography variant="body1">Posts</Typography>
-              {posts.map((post) => (
-                <PostCard key={post.title} {...post} />
-              ))}
-            </Stack>
+                <Stack
+                  spacing="10px"
+                  direction="row"
+                  justifyContent="space-between"
+                >
+                  <Typography variant="body1">Topics</Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                    }}
+                  >
+                    {topics.map((topic) => (
+                      <TopicChip
+                        key={topic}
+                        label={topic}
+                        onClick={() => handleTopicClick(topic)}
+                        selected={selectedTopics.includes(topic)}
+                      />
+                    ))}
+                  </Box>
+                </Stack>
+
+                <Stack spacing="10px">
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        lineHeight: '160%',
+                      }}
+                    >
+                      Sort by
+                    </Typography>
+                    <SortChip
+                      label="Hot"
+                      selected={selectedSort === 'Hot'}
+                      onClick={() => handleSortClick('Hot')}
+                      icon={<FireIcon size={4} />}
+                    />
+                    <SortChip
+                      label="Top"
+                      selected={selectedSort === 'Top'}
+                      onClick={() => handleSortClick('Top')}
+                      icon={<ArrowUpCircleIcon size={4} />}
+                    />
+                    <SortChip
+                      label="New"
+                      selected={selectedSort === 'New'}
+                      onClick={() => handleSortClick('New')}
+                      icon={<SparklesIcon size={4} />}
+                    />
+                  </Box>
+                </Stack>
+
+                <Stack direction="column" spacing="10px">
+                  <Typography variant="body1">Posts</Typography>
+                  {posts.map((post) => (
+                    <PostCard key={post.title} {...post} />
+                  ))}
+                </Stack>
+              </>
+            )}
           </Stack>
           <SwipeableDrawer
             hideBackdrop={true}
