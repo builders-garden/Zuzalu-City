@@ -4,14 +4,21 @@ import {
   Stack,
   Typography,
   Card,
-  CardContent,
   Avatar,
-  Chip,
   Box,
   Button,
   IconButton,
 } from '@mui/material';
 import TopicChip from './TopicChip';
+import { CardContent } from '@mui/material';
+import { styled } from '@mui/material/styles';
+
+const CardContentCustom = styled(CardContent)(({ theme }) => ({
+  padding: '10px',
+  '&:last-child': {
+    paddingBottom: '10px',
+  },
+}));
 
 interface PostCardProps {
   title: string;
@@ -55,15 +62,15 @@ const PostCard = ({
   return (
     <Card
       sx={{
-        bgcolor: 'grey.800',
+        backgroundColor: 'grey.800',
         color: 'white',
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'grey.600',
       }}
     >
-      <CardContent>
-        <Stack direction="row" spacing={2}>
+      <CardContentCustom sx={{ padding: '10px' }}>
+        <Box sx={{ padding: 0, display: 'flex' }} gap={2}>
           {image && (
             <Box
               component="img"
@@ -78,7 +85,7 @@ const PostCard = ({
             />
           )}
           <Stack flex={1} justifyContent="space-between">
-            <Stack direction="row" spacing="8px" alignItems="center" mb={2}>
+            <Stack direction="row" spacing="8px" alignItems="center">
               <Avatar
                 src={author.image}
                 alt={author.name}
@@ -95,7 +102,7 @@ const PostCard = ({
             <Typography variant="h6" gutterBottom>
               {title}
             </Typography>
-            <Typography variant="body2" color="grey.500" mb={2}>
+            <Typography variant="body2" color="grey.500">
               {body.length > 358 ? `${body.slice(0, 358)}...` : body}
             </Typography>
             <Stack
@@ -133,8 +140,8 @@ const PostCard = ({
               </Stack>
             </Stack>
           </Stack>
-        </Stack>
-      </CardContent>
+        </Box>
+      </CardContentCustom>
     </Card>
   );
 };
