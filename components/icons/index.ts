@@ -54,6 +54,7 @@ import { CheckIcon } from './Check';
 import { CircleCloseIcon } from './CircleClose';
 import { SettingIcon } from './Setting';
 import { ChatsIcon } from './Chats';
+import { ChatBubbleIcon } from './ChatBubble';
 import { AnnouncementsIcon } from './Announcements';
 import { ManageEventsIcon } from './ManageEvents';
 import { UserPlusIcon } from './UserPlus';
@@ -79,6 +80,11 @@ import { ChevronDoubleRightIcon } from './ChevronDoubleRight';
 import { MicrophoneIcon } from './Microphone';
 import { TagIcon } from './Tag';
 import { UserCircleIcon } from './UserCircle';
+import { ArrowUpOnSquareIcon } from './ArrowUpOnSquare';
+import { FireIcon } from './Fire';
+import { ArrowUpCircleIcon } from './ArrowUpCircle';
+import { SparklesIcon } from './Sparkles';
+
 export {
   HomeIcon,
   SearchIcon,
@@ -92,6 +98,7 @@ export {
   UsersIcon,
   PlusCircleIcon,
   RightArrowIcon,
+  ArrowUpOnSquareIcon,
   LotteryIcon,
   MapIcon,
   LockIcon,
@@ -110,6 +117,7 @@ export {
   PencilIcon,
   EditIcon,
   ChatIcon,
+  ChatBubbleIcon,
   TableIcon,
   MegaPhoneIcon,
   QuestionIcon,
@@ -146,6 +154,7 @@ export {
   NewspaperIcon,
   MinusIcon,
   TicketIcon,
+  ArrowUpCircleIcon,
   ArrowUpRightIcon,
   ArrowDownTrayIcon,
   ArrowUpLeftIcon,
@@ -156,9 +165,11 @@ export {
   ArrowDownSquare,
   HeartIcon,
   FingerPrintIcon,
+  FireIcon,
   QueueListIcon,
   ChevronDoubleRightIcon,
   MicrophoneIcon,
+  SparklesIcon,
   TagIcon,
   UserCircleIcon,
 };

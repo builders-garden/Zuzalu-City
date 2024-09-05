@@ -1,0 +1,327 @@
+'use client';
+import React, {
+  useState,
+  useEffect,
+  Dispatch,
+  SetStateAction,
+  useRef,
+} from 'react';
+import { useParams } from 'next/navigation';
+import {
+  Stack,
+  Box,
+  Typography,
+  SwipeableDrawer,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import { ZuButton } from '@/components/core';
+import {
+  PlusCircleIcon,
+  ArrowUpCircleIcon,
+  FireIcon,
+  SparklesIcon,
+} from '@/components/icons';
+import { useCeramicContext } from '@/context/CeramicContext';
+import { CeramicResponseType, EventEdge, Event } from '@/types';
+import { supabase } from '@/utils/supabase/client';
+import { Anchor, Contract } from '@/types';
+import { LatLngLiteral } from 'leaflet';
+import getLatLngFromAddress from '@/utils/osm';
+import TopicChip from './TopicChip';
+import SortChip from './SortChip';
+import PostCard from './PostCard';
+
+interface IDiscussions {
+  eventData: Event | undefined;
+  setVerify: React.Dispatch<React.SetStateAction<boolean>> | any;
+}
+
+const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
+  const [location, setLocation] = useState<string>('');
+
+  const [whitelist, setWhitelist] = useState<boolean>(false);
+  const [sponsor, setSponsor] = useState<boolean>(false);
+
+  const [isInitial, setIsInitial] = useState<boolean>(false);
+  const [isDisclaimer, setIsDisclaimer] = useState<boolean>(false);
+  const [isEmail, setIsEmail] = useState<boolean>(false);
+  const [isPayment, setIsPayment] = useState<boolean>(false);
+
+  const [isVerify, setIsVerify] = useState<boolean>(false);
+  const [isAgree, setIsAgree] = useState<boolean>(false);
+  const [isMint, setIsMint] = useState<boolean>(false);
+  const [isTransaction, setIsTransaction] = useState<boolean>(false);
+  const [isComplete, setIsComplete] = useState<boolean>(false);
+  const [tokenId, setTokenId] = useState<string>('');
+  const [isSponsorAgree, setIsSponsorAgree] = useState<boolean>(false);
+  const [isSponsorMint, setIsSponsorMint] = useState<boolean>(false);
+  const [isSponsorTransaction, setIsSponsorTransaction] =
+    useState<boolean>(false);
+  const [isSponsorComplete, setIsSponsorComplete] = useState<boolean>(false);
+  const [filteredResults, setFilteredResults] = useState<any[]>([]);
+  const [ticketMinted, setTicketMinted] = useState<any[]>([]);
+  const [mintedContract, setMintedContract] = useState<Contract>();
+  const [transactionLog, setTransactionLog] = useState<any>();
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [selectedSort, setSelectedSort] = useState<string>('Hot');
+
+  const params = useParams();
+  const eventId = params.eventid.toString();
+
+  const { breakpoints } = useTheme();
+  const isMobile = useMediaQuery(breakpoints.down('sm'));
+
+  const { composeClient } = useCeramicContext();
+
+  const [state, setState] = useState({
+    top: false,
+    left: false,
+    bottom: false,
+    right: false,
+  });
+
+  const [osm, setOsm] = useState<LatLngLiteral | undefined>({
+    lat: 0,
+    lng: 0,
+  });
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const getLocation = async () => {
+    try {
+      const { data } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('eventId', eventId);
+      if (data !== null) {
+        setLocation(data[0].name);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const toggleDrawer = (anchor: Anchor, open: boolean) => {
+    setState({ ...state, [anchor]: open });
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await getLocation();
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getLatLngFromAddress(location);
+      setOsm(res);
+    };
+    fetchData();
+  }, [location]);
+
+  const topics = [
+    'Announcements',
+    'Question',
+    'Meetup',
+    'Event',
+    'Community information',
+    'Coding',
+    'Logistics',
+    'Q&A',
+    'Workshop',
+    'Afterparty',
+    'Other',
+  ];
+
+  const posts = [
+    {
+      title: 'Post 1',
+      body: 'Post 1',
+      author: {
+        name: 'Author 1',
+        image: 'https://picsum.photos/200/300',
+      },
+      date: '2021-01-01',
+      tags: ['Tag 1', 'Tag 2'],
+      image: 'https://picsum.photos/200/300',
+      likes: 132,
+      comments: 15,
+    },
+  ];
+
+  const handleTopicClick = (topic: string) => {
+    setSelectedTopics((prevTopics) => {
+      if (prevTopics.includes(topic)) {
+        return prevTopics.filter((t) => t !== topic);
+      } else {
+        return [...prevTopics, topic];
+      }
+    });
+  };
+
+  const handleSortClick = (sort: string) => {
+    setSelectedSort(sort);
+  };
+
+  return (
+    <Stack
+      justifyContent="center"
+      alignItems="center"
+      bgcolor="#222222"
+      padding="40px"
+      sx={{
+        [breakpoints.down('md')]: {
+          padding: '20px',
+        },
+        [breakpoints.down('sm')]: {
+          padding: '10px',
+        },
+      }}
+    >
+      {eventData && (
+        <Stack
+          direction="row"
+          justifyContent={'center'}
+          sx={{
+            [breakpoints.down('md')]: {
+              paddingTop: '20px',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '20px',
+            },
+            [breakpoints.down('sm')]: {
+              paddingTop: '1px',
+            },
+          }}
+        >
+          <Stack
+            spacing="30px"
+            boxSizing={'border-box'}
+            sx={{
+              px: '320px',
+              [breakpoints.down('lg')]: {
+                px: '120px',
+              },
+              [breakpoints.down('md')]: {
+                px: '20px',
+              },
+              [breakpoints.down('sm')]: {
+                px: '2px',
+              },
+            }}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="h4">Discussions</Typography>
+              <ZuButton
+                variant="outlined"
+                size="small"
+                startIcon={<PlusCircleIcon size={5} />}
+              >
+                New Post
+              </ZuButton>
+            </Stack>
+
+            <Stack
+              spacing="10px"
+              direction="row"
+              justifyContent="space-between"
+            >
+              <Typography variant="body1">Topics</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                }}
+              >
+                {topics.map((topic) => (
+                  <TopicChip
+                    key={topic}
+                    label={topic}
+                    onClick={() => handleTopicClick(topic)}
+                    selected={selectedTopics.includes(topic)}
+                  />
+                ))}
+              </Box>
+            </Stack>
+
+            <Stack spacing="10px">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    lineHeight: '160%',
+                  }}
+                >
+                  Sort by
+                </Typography>
+                <SortChip
+                  label="Hot"
+                  selected={selectedSort === 'Hot'}
+                  onClick={() => handleSortClick('Hot')}
+                  icon={<FireIcon size={4} />}
+                />
+                <SortChip
+                  label="Top"
+                  selected={selectedSort === 'Top'}
+                  onClick={() => handleSortClick('Top')}
+                  icon={<ArrowUpCircleIcon size={4} />}
+                />
+                <SortChip
+                  label="New"
+                  selected={selectedSort === 'New'}
+                  onClick={() => handleSortClick('New')}
+                  icon={<SparklesIcon size={4} />}
+                />
+              </Box>
+            </Stack>
+
+            <Stack direction="column" spacing="10px">
+              <Typography variant="body1">Posts</Typography>
+              {posts.map((post) => (
+                <PostCard key={post.title} {...post} />
+              ))}
+            </Stack>
+          </Stack>
+          <SwipeableDrawer
+            hideBackdrop={true}
+            sx={{
+              '& .MuiDrawer-paper': {
+                boxShadow: 'none',
+              },
+            }}
+            anchor="right"
+            open={state['right']}
+            onClose={() => toggleDrawer('right', false)}
+            onOpen={() => toggleDrawer('right', true)}
+            ref={ref}
+          >
+            {/* {List('right')} */}
+          </SwipeableDrawer>
+        </Stack>
+      )}
+    </Stack>
+  );
+};
+
+export default Discussions;

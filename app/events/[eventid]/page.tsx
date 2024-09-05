@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Stack } from '@mui/material';
 import { Thumbnail, Subbar } from './components';
-import { About, Sessions } from './tabs';
+import { About, Discussions, Sessions } from './tabs';
 import { CeramicResponseType, EventEdge, Event } from '@/types';
 import { useCeramicContext } from '@/context/CeramicContext';
 import { useParams } from 'next/navigation';
@@ -12,6 +12,7 @@ const Home = () => {
   const [eventData, setEventData] = useState<Event>();
   const { composeClient, ceramic } = useCeramicContext();
   const [sessionView, setSessionView] = useState<boolean>(false);
+  const [discussionsView, setDiscussionsView] = useState<boolean>(false);
   const [verify, setVerify] = useState<boolean>(false);
   const eventId = params.eventid.toString();
   const [urlOption, setUrlOption] = useState<string>('');
@@ -113,6 +114,7 @@ const Home = () => {
           members.includes(userDID)
         ) {
           setSessionView(true);
+          setDiscussionsView(true);
         }
         if (sessionStorage.getItem('tab')) {
           setTabName(sessionStorage.getItem('tab') as string);
@@ -134,12 +136,16 @@ const Home = () => {
         tabName={tabName}
         setTabName={setTabName}
         canViewSessions={sessionView}
+        canViewDiscussions={discussionsView}
       />
       {tabName === 'About' && (
         <About eventData={eventData} setVerify={setVerify} />
       )}
       {tabName === 'Sessions' && (
         <Sessions eventData={eventData} option={urlOption} />
+      )}
+      {tabName === 'Discussions' && (
+        <Discussions eventData={eventData} setVerify={setVerify} />
       )}
     </Stack>
   );
