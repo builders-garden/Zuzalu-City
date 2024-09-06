@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Stack, Typography, Avatar, Button, Divider } from '@mui/material';
 import { HeartIcon, ChatBubbleIcon } from '@/components/icons';
 import { ArrowUpOnSquareIcon } from '@/components/icons/ArrowUpOnSquare';
+import ReplyForm from './ReplyForm';
 
 interface CommentDetailsProps {
   reply: {
+    id: string; // Add this line
     author: {
       name: string;
       image: string;
@@ -20,9 +22,32 @@ interface CommentDetailsProps {
     };
     content: string;
   };
+  onReply: (commentId: string, content: string, topics: string[]) => void;
 }
 
-const CommentDetails: React.FC<CommentDetailsProps> = ({ reply, replyTo }) => {
+const CommentDetails: React.FC<CommentDetailsProps> = ({
+  reply,
+  replyTo,
+  onReply,
+}) => {
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const replyFormRef = useRef<HTMLDivElement>(null);
+
+  const handleReplyClick = () => {
+    setShowReplyForm(true);
+    setTimeout(() => {
+      replyFormRef.current?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      });
+    }, 0);
+  };
+
+  const handleReplySubmit = (content: string, topics: string[]) => {
+    onReply(reply.id, content, topics);
+    setShowReplyForm(false);
+  };
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center">
@@ -76,6 +101,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({ reply, replyTo }) => {
           startIcon={<ChatBubbleIcon size={4} />}
           variant="contained"
           size="small"
+          onClick={handleReplyClick}
         >
           Reply
         </Button>
@@ -87,6 +113,16 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({ reply, replyTo }) => {
           Share
         </Button>
       </Stack>
+      {showReplyForm && (
+        <div>
+          <ReplyForm
+            onCancel={() => setShowReplyForm(false)}
+            onSubmit={handleReplySubmit}
+            replyingTo={reply.author.name}
+          />
+          <div ref={replyFormRef} />
+        </div>
+      )}
       <Divider />
     </Stack>
   );

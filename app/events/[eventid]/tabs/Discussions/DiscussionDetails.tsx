@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Stack,
   Typography,
@@ -34,30 +34,51 @@ import { PostCardProps } from './PostCard';
 import MarkdownVisualizer from './MarkdownVisualizer';
 import { useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import ReplyForm from './ReplyForm';
 
 interface DiscussionDetailsProps {
   discussion: PostCardProps | undefined;
   eventId: string;
 }
+export type ReplyType = {
+  id: string;
+  author: {
+    name: string;
+    image: string;
+  };
+  date: string;
+  content: string;
+  likes: number;
+  replyTo?: {
+    author: {
+      image: string;
+      name: string;
+    };
+    content: string;
+  };
+};
 
 const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   discussion,
   eventId,
 }) => {
-  // Updated replies data to include replyTo
-  const replies = [
+  const [replies, setReplies] = useState<ReplyType[]>([
     {
+      id: '1',
       author: { name: 'vitalik.eth', image: 'https://picsum.photos/200/300' },
       date: '2 days ago',
       content: 'Sei il miglior insegnante che ETHWarsaw abbia mai avuto.',
       likes: 133,
       replyTo: {
-        author: { name: 'Frankkcap' },
+        author: {
+          name: 'Frankkcap',
+          image: 'https://picsum.photos/200/250',
+        },
         content: 'Fra sto tutto fatto',
       },
     },
     // Add more replies as needed
-  ];
+  ]);
 
   const [selectedSort, setSelectedSort] = useState<string>('Hot');
   const [openReportModal, setOpenReportModal] = useState(false);
@@ -65,6 +86,9 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   const [openShareModal, setOpenShareModal] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const replyFormRef = useRef<HTMLDivElement>(null);
 
   const handleSortClick = (sort: string) => {
     setSelectedSort(sort);
@@ -148,6 +172,67 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     'Bot account',
   ];
 
+  const handleReplyClick = () => {
+    setShowReplyForm(true);
+    setTimeout(() => {
+      replyFormRef.current?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      });
+    }, 0);
+  };
+
+  const handleReplySubmit = (content: string, topics: string[]) => {
+    // Implement the reply submission logic here for the main discussion
+    console.log('Reply submitted:', { content, topics });
+    setShowReplyForm(false);
+    // Add the new reply to the replies list
+    setReplies((prevReplies) => [
+      ...prevReplies,
+      {
+        id: (prevReplies.length + 1).toString(),
+        author: {
+          name: 'Current User',
+          image: 'https://picsum.photos/200/300',
+        },
+        date: 'Just now',
+        content: content,
+        likes: 0,
+        replyTo: undefined,
+      },
+    ]);
+  };
+
+  const handleCommentReply = (
+    commentId: string,
+    content: string,
+    topics: string[],
+  ) => {
+    // Implement the reply submission logic here for comments
+    console.log('Reply to comment submitted:', { commentId, content, topics });
+    // Add the new reply to the replies list
+    setReplies((prevReplies) => [
+      ...prevReplies,
+      {
+        id: (prevReplies.length + 1).toString(),
+        author: {
+          name: 'Current User',
+          image: 'https://picsum.photos/200/300',
+        },
+        date: 'Just now',
+        content: content,
+        likes: 0,
+        replyTo: {
+          author: {
+            name: replies.find((r) => r.id === commentId)?.author.name || '',
+            image: replies.find((r) => r.id === commentId)?.author.image || '',
+          },
+          content: replies.find((r) => r.id === commentId)?.content || '',
+        },
+      },
+    ]);
+  };
+
   return (
     <Stack spacing={3} sx={{ width: '100%' }}>
       <Link href={`/events/${eventId}`} passHref>
@@ -205,10 +290,20 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
             Share
           </Button>
         </Stack>
-        <Button variant="contained" size="small">
+        <Button variant="contained" size="small" onClick={handleReplyClick}>
           Reply
         </Button>
       </Stack>
+
+      {showReplyForm && (
+        <div>
+          <ReplyForm
+            onCancel={() => setShowReplyForm(false)}
+            onSubmit={handleReplySubmit}
+          />
+          <div ref={replyFormRef} />
+        </div>
+      )}
 
       {/* Report Modal */}
       <Modal
@@ -395,8 +490,13 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
 
       {/* Existing replies */}
       <Stack spacing={3}>
-        {replies.map((reply, index) => (
-          <CommentDetails key={index} reply={reply} replyTo={reply.replyTo} />
+        {replies.map((reply) => (
+          <CommentDetails
+            key={reply.id}
+            reply={reply}
+            replyTo={reply.replyTo}
+            onReply={handleCommentReply}
+          />
         ))}
       </Stack>
     </Stack>

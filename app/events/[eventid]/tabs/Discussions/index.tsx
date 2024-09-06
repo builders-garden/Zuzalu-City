@@ -33,6 +33,7 @@ import TopicChip from './TopicChip';
 import SortChip from './SortChip';
 import PostCard from './PostCard';
 import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
+import NewPost from './NewPost';
 
 interface IDiscussions {
   eventData: Event | undefined;
@@ -215,6 +216,11 @@ See you there!
   const discussionId = searchParams.get('discussionId');
   const selectedDiscussion = posts.find((post) => post.id === discussionId);
 
+  const [isNewPostOpen, setIsNewPostOpen] = useState(false);
+
+  const handleOpenNewPost = () => setIsNewPostOpen(true);
+  const handleCloseNewPost = () => setIsNewPostOpen(false);
+
   return (
     <Stack
       justifyContent="center"
@@ -267,6 +273,8 @@ See you there!
                 discussion={selectedDiscussion}
                 eventId={eventId}
               />
+            ) : isNewPostOpen ? (
+              <NewPost eventId={eventId} onCancel={handleCloseNewPost} />
             ) : (
               <>
                 <Stack
@@ -279,6 +287,7 @@ See you there!
                     variant="outlined"
                     size="small"
                     startIcon={<PlusCircleIcon size={5} />}
+                    onClick={handleOpenNewPost}
                   >
                     New Post
                   </ZuButton>
