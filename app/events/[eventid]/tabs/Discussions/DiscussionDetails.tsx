@@ -149,7 +149,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   ];
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ width: '100%' }}>
       <Link href={`/events/${eventId}`} passHref>
         <Button
           variant="contained"

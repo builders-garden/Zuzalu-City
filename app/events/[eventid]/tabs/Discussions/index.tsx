@@ -222,6 +222,7 @@ See you there!
       bgcolor="#222222"
       paddingTop="40px"
       sx={{
+        width: '100%', // Add this line
         [breakpoints.down('md')]: {
           paddingTop: '20px',
         },
@@ -235,6 +236,7 @@ See you there!
           direction="row"
           justifyContent={'center'}
           sx={{
+            width: '100%', // Add this line
             [breakpoints.down('md')]: {
               flexDirection: 'column',
               alignItems: 'center',
@@ -246,6 +248,8 @@ See you there!
             spacing={3}
             boxSizing={'border-box'}
             sx={{
+              width: '100%', // Add this line
+              maxWidth: '1200px', // Add this line
               px: '240px',
               [breakpoints.down('lg')]: {
                 px: '120px',
@@ -254,17 +258,15 @@ See you there!
                 px: '20px',
               },
               [breakpoints.down('sm')]: {
-                px: '2px',
+                px: '16px', // Change this from 2px to 16px for better mobile spacing
               },
             }}
           >
             {discussionId && selectedDiscussion ? (
-              <>
-                <DiscussionDetails
-                  discussion={selectedDiscussion}
-                  eventId={eventId}
-                />
-              </>
+              <DiscussionDetails
+                discussion={selectedDiscussion}
+                eventId={eventId}
+              />
             ) : (
               <>
                 <Stack
