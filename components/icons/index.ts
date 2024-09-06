@@ -85,6 +85,9 @@ import { FireIcon } from './Fire';
 import { ArrowUpCircleIcon } from './ArrowUpCircle';
 import { SparklesIcon } from './Sparkles';
 import { FlagIcon } from './Flag';
+import WhatsappIcon from './Whatsapp';
+import TwitterIcon from './Twitter';
+import FarcasterIcon from './Farcaster';
 
 export {
   HomeIcon,
@@ -166,6 +169,7 @@ export {
   ArrowDownSquare,
   HeartIcon,
   FingerPrintIcon,
+  FarcasterIcon,
   FlagIcon,
   FireIcon,
   QueueListIcon,
@@ -173,5 +177,7 @@ export {
   MicrophoneIcon,
   SparklesIcon,
   TagIcon,
+  TwitterIcon,
   UserCircleIcon,
+  WhatsappIcon,
 };

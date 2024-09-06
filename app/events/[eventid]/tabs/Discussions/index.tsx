@@ -220,13 +220,13 @@ See you there!
       justifyContent="center"
       alignItems="center"
       bgcolor="#222222"
-      padding="40px"
+      paddingTop="40px"
       sx={{
         [breakpoints.down('md')]: {
-          padding: '20px',
+          paddingTop: '20px',
         },
         [breakpoints.down('sm')]: {
-          padding: '10px',
+          paddingTop: '10px',
         },
       }}
     >
@@ -236,18 +236,14 @@ See you there!
           justifyContent={'center'}
           sx={{
             [breakpoints.down('md')]: {
-              paddingTop: '20px',
               flexDirection: 'column',
               alignItems: 'center',
               gap: '20px',
             },
-            [breakpoints.down('sm')]: {
-              paddingTop: '5px',
-            },
           }}
         >
           <Stack
-            spacing="30px"
+            spacing={3}
             boxSizing={'border-box'}
             sx={{
               px: '240px',
@@ -263,10 +259,12 @@ See you there!
             }}
           >
             {discussionId && selectedDiscussion ? (
-              <DiscussionDetails
-                discussion={selectedDiscussion}
-                eventId={eventId}
-              />
+              <>
+                <DiscussionDetails
+                  discussion={selectedDiscussion}
+                  eventId={eventId}
+                />
+              </>
             ) : (
               <>
                 <Stack
