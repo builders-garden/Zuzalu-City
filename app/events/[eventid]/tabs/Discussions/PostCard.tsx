@@ -119,12 +119,18 @@ const PostCard = ({
                   {title}
                 </Typography>
               </Link>
-              <Box sx={{ minHeight: '55px', color: 'grey.500' }}>
-                <MarkdownVisualizer
-                  content={
-                    body.length > 200 ? `${body.slice(0, 200)}...` : body
-                  }
-                />
+              <Box
+                sx={{
+                  minHeight: '55px',
+                  color: 'grey.500',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: '6',
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
+                <MarkdownVisualizer content={body} isPreview={true} />
               </Box>
             </Stack>
             <Stack

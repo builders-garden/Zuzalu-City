@@ -149,7 +149,7 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
       body: `
 # Welcome to our Event!
 
-![Event Banner](https://picsum.photos/900/700)
+![Event Banner](https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=1645&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)
 
 We're excited to have you join us for this amazing event. Here are some highlights:
 
@@ -167,17 +167,19 @@ We're excited to have you join us for this amazing event. Here are some highligh
 
 Don't forget to check out our sponsor booths!
 
-![Sponsor Area](https://picsum.photos/800/400)
+![Sponsor Area](https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=1760&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)
 
 See you there!
     `,
       author: {
         name: 'Author 1',
-        image: 'https://picsum.photos/200/300',
+        image:
+          'https://images.unsplash.com/profile-1574363570516-50a9209e8f08image?w=150&dpr=1&crop=faces&bg=%23fff&h=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
       },
       date: '2021-01-01',
       tags: ['Tag 1', 'Tag 2'],
-      image: 'https://picsum.photos/200/300',
+      image:
+        'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=1645&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       likes: 132,
       replies: 15,
       eventId: eventId,
@@ -188,7 +190,8 @@ See you there!
       body: 'Post 2',
       author: {
         name: 'Author 1',
-        image: 'https://picsum.photos/200/300',
+        image:
+          'https://images.unsplash.com/profile-1722954188660-e468abf54fc5image?w=150&dpr=1&crop=faces&bg=%23fff&h=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
       },
       date: '2024-09-01',
       tags: ['Tag 3', 'Tag 4'],

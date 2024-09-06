@@ -65,17 +65,33 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   const [replies, setReplies] = useState<ReplyType[]>([
     {
       id: '1',
-      author: { name: 'vitalik.eth', image: 'https://picsum.photos/200/300' },
+      author: {
+        name: 'vitalik.eth',
+        image:
+          'https://images.unsplash.com/profile-1722954188660-e468abf54fc5image?w=150&dpr=1&crop=faces&bg=%23fff&h=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+      },
       date: '2 days ago',
-      content: 'Sei il miglior insegnante che ETHWarsaw abbia mai avuto.',
+      content: 'I took time',
       likes: 133,
       replyTo: {
         author: {
           name: 'Frankkcap',
-          image: 'https://picsum.photos/200/250',
+          image:
+            'https://images.unsplash.com/profile-fb-1539620817-74cfeb7b6219.jpg?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
         },
-        content: 'Fra sto tutto fatto',
+        content: 'Love your talk!',
       },
+    },
+    {
+      id: '2',
+      author: {
+        name: 'satoshi.btc',
+        image:
+          'https://images.unsplash.com/profile-1529859531004-bdbd14a9ed7c?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+      },
+      date: '1 day ago',
+      content: 'I took time to read your talk and it was amazing!',
+      likes: 98,
     },
     // Add more replies as needed
   ]);
@@ -193,7 +209,8 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
         id: (prevReplies.length + 1).toString(),
         author: {
           name: 'Current User',
-          image: 'https://picsum.photos/200/300',
+          image:
+            'https://images.unsplash.com/profile-1529859531004-bdbd14a9ed7c?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
         },
         date: 'Just now',
         content: content,
@@ -217,7 +234,8 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
         id: (prevReplies.length + 1).toString(),
         author: {
           name: 'Current User',
-          image: 'https://picsum.photos/200/300',
+          image:
+            'https://images.unsplash.com/profile-1529859531004-bdbd14a9ed7c?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
         },
         date: 'Just now',
         content: content,
