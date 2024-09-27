@@ -13,7 +13,6 @@ import {
   BeamsByAuthorDid,
   decodeb64SlateContent,
 } from '@/utils/akasha';
-import { nodeServerAppPaths } from 'next/dist/build/webpack/plugins/pages-manifest-plugin';
 
 const akashaSdk = getSDK();
 
