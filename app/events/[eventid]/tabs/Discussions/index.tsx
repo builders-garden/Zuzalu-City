@@ -240,153 +240,151 @@ See you there!
         },
       }}
     >
-      {eventData && (
+      <Stack
+        direction="row"
+        justifyContent={'center'}
+        sx={{
+          width: '100%', // Add this line
+          [breakpoints.down('md')]: {
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px',
+          },
+        }}
+      >
         <Stack
-          direction="row"
-          justifyContent={'center'}
+          spacing={3}
+          boxSizing={'border-box'}
           sx={{
             width: '100%', // Add this line
+            maxWidth: '1200px', // Add this line
+            px: '240px',
+            [breakpoints.down('lg')]: {
+              px: '120px',
+            },
             [breakpoints.down('md')]: {
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '20px',
+              px: '20px',
+            },
+            [breakpoints.down('sm')]: {
+              px: '16px', // Change this from 2px to 16px for better mobile spacing
             },
           }}
         >
-          <Stack
-            spacing={3}
-            boxSizing={'border-box'}
-            sx={{
-              width: '100%', // Add this line
-              maxWidth: '1200px', // Add this line
-              px: '240px',
-              [breakpoints.down('lg')]: {
-                px: '120px',
-              },
-              [breakpoints.down('md')]: {
-                px: '20px',
-              },
-              [breakpoints.down('sm')]: {
-                px: '16px', // Change this from 2px to 16px for better mobile spacing
-              },
-            }}
-          >
-            {discussionId && selectedDiscussion ? (
-              <DiscussionDetails
-                discussion={selectedDiscussion}
-                eventId={eventId}
-              />
-            ) : isNewPostOpen ? (
-              <NewPost eventId={eventId} onCancel={handleCloseNewPost} />
-            ) : (
-              <>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
+          {discussionId && selectedDiscussion ? (
+            <DiscussionDetails
+              discussion={selectedDiscussion}
+              eventId={eventId}
+            />
+          ) : isNewPostOpen ? (
+            <NewPost eventId={eventId} onCancel={handleCloseNewPost} />
+          ) : (
+            <>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography variant="h4">Discussions</Typography>
+                <ZuButton
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PlusCircleIcon size={5} />}
+                  onClick={handleOpenNewPost}
                 >
-                  <Typography variant="h4">Discussions</Typography>
-                  <ZuButton
-                    variant="outlined"
-                    size="small"
-                    startIcon={<PlusCircleIcon size={5} />}
-                    onClick={handleOpenNewPost}
-                  >
-                    New Post
-                  </ZuButton>
-                </Stack>
+                  New Post
+                </ZuButton>
+              </Stack>
 
-                <Stack
-                  spacing="10px"
-                  direction="row"
-                  justifyContent="space-between"
+              <Stack
+                spacing="10px"
+                direction="row"
+                justifyContent="space-between"
+              >
+                <Typography variant="body1">Topics</Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  }}
                 >
-                  <Typography variant="body1">Topics</Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '10px',
-                    }}
-                  >
-                    {topics.map((topic) => (
-                      <TopicChip
-                        key={topic}
-                        label={topic}
-                        onClick={() => handleTopicClick(topic)}
-                        selected={selectedTopics.includes(topic)}
-                      />
-                    ))}
-                  </Box>
-                </Stack>
-
-                <Stack spacing="10px">
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '10px',
-                      justifyContent: 'flex-end',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        lineHeight: '160%',
-                      }}
-                    >
-                      Sort by
-                    </Typography>
-                    <SortChip
-                      label="Hot"
-                      selected={selectedSort === 'Hot'}
-                      onClick={() => handleSortClick('Hot')}
-                      icon={<FireIcon size={4} />}
+                  {topics.map((topic) => (
+                    <TopicChip
+                      key={topic}
+                      label={topic}
+                      onClick={() => handleTopicClick(topic)}
+                      selected={selectedTopics.includes(topic)}
                     />
-                    <SortChip
-                      label="Top"
-                      selected={selectedSort === 'Top'}
-                      onClick={() => handleSortClick('Top')}
-                      icon={<ArrowUpCircleIcon size={4} />}
-                    />
-                    <SortChip
-                      label="New"
-                      selected={selectedSort === 'New'}
-                      onClick={() => handleSortClick('New')}
-                      icon={<SparklesIcon size={4} />}
-                    />
-                  </Box>
-                </Stack>
-
-                <Stack direction="column" spacing="10px">
-                  <Typography variant="body1">Posts</Typography>
-                  {posts.map((post) => (
-                    <PostCard key={post.title} {...post} />
                   ))}
-                </Stack>
-              </>
-            )}
-          </Stack>
-          <SwipeableDrawer
-            hideBackdrop={true}
-            sx={{
-              '& .MuiDrawer-paper': {
-                boxShadow: 'none',
-              },
-            }}
-            anchor="right"
-            open={state['right']}
-            onClose={() => toggleDrawer('right', false)}
-            onOpen={() => toggleDrawer('right', true)}
-            ref={ref}
-          >
-            {/* {List('right')} */}
-          </SwipeableDrawer>
+                </Box>
+              </Stack>
+
+              <Stack spacing="10px">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      lineHeight: '160%',
+                    }}
+                  >
+                    Sort by
+                  </Typography>
+                  <SortChip
+                    label="Hot"
+                    selected={selectedSort === 'Hot'}
+                    onClick={() => handleSortClick('Hot')}
+                    icon={<FireIcon size={4} />}
+                  />
+                  <SortChip
+                    label="Top"
+                    selected={selectedSort === 'Top'}
+                    onClick={() => handleSortClick('Top')}
+                    icon={<ArrowUpCircleIcon size={4} />}
+                  />
+                  <SortChip
+                    label="New"
+                    selected={selectedSort === 'New'}
+                    onClick={() => handleSortClick('New')}
+                    icon={<SparklesIcon size={4} />}
+                  />
+                </Box>
+              </Stack>
+
+              <Stack direction="column" spacing="10px">
+                <Typography variant="body1">Posts</Typography>
+                {posts.map((post) => (
+                  <PostCard key={post.title} {...post} />
+                ))}
+              </Stack>
+            </>
+          )}
         </Stack>
-      )}
+        <SwipeableDrawer
+          hideBackdrop={true}
+          sx={{
+            '& .MuiDrawer-paper': {
+              boxShadow: 'none',
+            },
+          }}
+          anchor="right"
+          open={state['right']}
+          onClose={() => toggleDrawer('right', false)}
+          onOpen={() => toggleDrawer('right', true)}
+          ref={ref}
+        >
+          {/* {List('right')} */}
+        </SwipeableDrawer>
+      </Stack>
     </Stack>
   );
 };
