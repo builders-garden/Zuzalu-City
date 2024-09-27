@@ -100,7 +100,10 @@
     "viem": "^2.9.31",
     "wagmi": "^2.8.0",
     "web3-utils": "^4.3.0",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "@akashaorg/composedb-models": "^0.1.1",
+    "@akashaorg/core-sdk": "^0.1.8-alpha",
+    "@akashaorg/typings": "^0.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.5",
