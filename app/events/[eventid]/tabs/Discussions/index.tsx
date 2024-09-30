@@ -34,6 +34,15 @@ import SortChip from './SortChip';
 import PostCard from './PostCard';
 import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
 import NewPost from './NewPost';
+import akashaSdk from '@/utils/akasha/akasha';
+import {
+  AkashaReadableBeam,
+  BeamsByAuthorDid,
+  extractBeamsReadableContent,
+  getBeams,
+  getReadableBeamsByAuthorDid,
+} from '@/utils/akasha';
+import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 
 interface IDiscussions {
   eventData: Event | undefined;
@@ -223,6 +232,70 @@ See you there!
 
   const handleOpenNewPost = () => setIsNewPostOpen(true);
   const handleCloseNewPost = () => setIsNewPostOpen(false);
+
+  // Akasha User Authentication
+  // const [userAuth, setUserAuth] = useState<
+  //   | ({
+  //       id?: string;
+  //       ethAddress?: string;
+  //     } & {
+  //       isNewUser: boolean;
+  //     })
+  //   | null
+  // >(null);
+  // useEffect(() => {
+  //   if (!userAuth) {
+  //     akashaSdk.api.auth
+  //       .signIn({
+  //         provider: 2,
+  //         checkRegistered: false,
+  //       })
+  //       .then((res) => {
+  //         console.log('auth res', res);
+  //         setUserAuth(res.data);
+  //       });
+  //   }
+  // }, [userAuth]);
+
+  // const [beamsByAuthor, setBeamsByAuthor] = useState<BeamsByAuthorDid | null>(
+  //   null,
+  // );
+  // const fetchBeamsByAuthorDid = async (id: string) => {
+  //   const readableAuthorBeams = await getReadableBeamsByAuthorDid(id);
+  //   setBeamsByAuthor(readableAuthorBeams);
+  // };
+  // useEffect(() => {
+  //   if (userAuth?.id) {
+  //     fetchBeamsByAuthorDid(userAuth?.id);
+  //   }
+  // }, [userAuth?.id]);
+  // console.log('beamsByAuthor', beamsByAuthor);
+
+  const [beams, setBeams] = useState<Array<AkashaReadableBeam> | null>(null);
+  useEffect(() => {
+    const fetchBeams = async () => {
+      const beams = await getBeams({
+        first: 3,
+        filters: {
+          where: {
+            appID: {
+              equalTo:
+                'k2t6wzhkhabz0onog2r6n2zwtxvfn497xne1eiozqjoqnxigqvizhvwgz5dykh',
+            },
+          },
+        },
+      });
+      if (beams?.edges) {
+        setBeams(
+          await extractBeamsReadableContent(
+            beams.edges.map((beam) => beam?.node) as AkashaBeam[],
+          ),
+        );
+      }
+    };
+    fetchBeams();
+  }, []);
+  console.log('beams', beams);
 
   return (
     <Stack

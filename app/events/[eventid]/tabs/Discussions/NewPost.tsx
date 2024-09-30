@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Typography,
   TextField,
@@ -9,6 +9,9 @@ import {
 } from '@mui/material';
 import TopicChip from './TopicChip';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
+import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import akashaSdk from '@/utils/akasha/akasha';
 
 interface NewPostProps {
   eventId: string;
@@ -50,8 +53,95 @@ const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
   const handleSubmit = () => {
     // Implement post submission logic here
     console.log({ title, content, selectedTopics, eventId });
-    onCancel(); // Go back to the discussions list after posting
+    try {
+      createBeamPassingBlocks();
+    } catch (error) {
+      console.error('Error creating beam', error);
+      onCancel(); // Go back to the discussions list after posting
+    }
   };
+
+  // Akasha User Authentication (required for creating a beam)
+  const [userAuth, setUserAuth] = useState<
+    | ({
+        id?: string;
+        ethAddress?: string;
+      } & {
+        isNewUser: boolean;
+      })
+    | null
+  >(null);
+  useEffect(() => {
+    if (!userAuth) {
+      akashaSdk.api.auth
+        .signIn({
+          provider: 2,
+          checkRegistered: false,
+        })
+        .then((res) => {
+          console.log('auth res', res);
+          setUserAuth(res.data);
+        });
+    }
+  }, [userAuth]);
+
+  function createBeamPassingBlocks() {
+    if (!title || !content) {
+      throw new Error('Beam title and content are required');
+    }
+    createBeamFromBlocks({
+      appID: 'k2t6wzhkhabz0onog2r6n2zwtxvfn497xne1eiozqjoqnxigqvizhvwgz5dykh',
+      appVersionID:
+        'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
+      active: true,
+      blocks: [
+        {
+          active: true,
+          content: [
+            {
+              label: 'beam-title',
+              propertyType: 'slate-block',
+              value: encodeSlateToBase64([
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      text: title,
+                    },
+                  ],
+                },
+              ]),
+            },
+            {
+              label: 'beam-content',
+              propertyType: 'slate-block',
+              value: encodeSlateToBase64([
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      text: content,
+                    },
+                  ],
+                },
+              ]),
+            },
+          ],
+          createdAt: new Date().toISOString(),
+          kind: AkashaContentBlockBlockDef.Text,
+          nsfw: false,
+          appVersionID:
+            'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
+        },
+      ],
+    })
+      .then((res) => {
+        console.log('createBeamFromBlocks res', res);
+      })
+      .catch((err) => {
+        console.error('createBeamFromBlocks error', err);
+      });
+  }
 
   return (
     <Stack spacing={3}>
