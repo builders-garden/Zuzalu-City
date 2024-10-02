@@ -4,7 +4,6 @@ import {
   Stack,
   Typography,
   Card,
-  Avatar,
   Box,
   Button,
   IconButton,
@@ -14,6 +13,7 @@ import { CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Link from 'next/link';
 import MarkdownVisualizer from './MarkdownVisualizer';
+import { Post } from '@/utils/akasha/beam-to-markdown';
 
 const CardContentCustom = styled(CardContent)(({ theme }) => ({
   padding: '10px',
@@ -22,34 +22,17 @@ const CardContentCustom = styled(CardContent)(({ theme }) => ({
   },
 }));
 
-export interface PostCardProps {
-  eventId: string;
-  id: string;
-  title: string;
-  body: string;
-  author: {
-    name: string;
-    image: string;
-  };
-  date: string;
-  tags: string[];
-  image?: string;
-  likes: number;
-  replies: number;
-}
-
 const PostCard = ({
   eventId,
   id,
   title,
   body,
   author,
-  date,
-  tags,
-  image,
-  likes,
-  replies,
-}: PostCardProps) => {
+  createdAt,
+  tags = [],
+  likes = 0,
+  replies = 0,
+}: Post) => {
   const getDaysAgo = (dateString: string): string => {
     const postDate = new Date(dateString);
     const currentDate = new Date();
@@ -63,7 +46,7 @@ const PostCard = ({
     return `${diffDays} days ago`;
   };
 
-  const daysAgo = getDaysAgo(date);
+  const daysAgo = getDaysAgo(createdAt);
 
   return (
     <Card
@@ -77,27 +60,9 @@ const PostCard = ({
     >
       <CardContentCustom sx={{ padding: '10px' }}>
         <Box sx={{ padding: 0, display: 'flex' }} gap={2}>
-          {image && (
-            <Box
-              component="img"
-              src={image}
-              alt={title}
-              sx={{
-                width: 176,
-                height: 176,
-                objectFit: 'cover',
-                borderRadius: '10px',
-              }}
-            />
-          )}
           <Stack flex={1} justifyContent="space-between" gap={2}>
             <Stack direction="row" spacing="8px" alignItems="center">
-              <Avatar
-                src={author.image}
-                alt={author.name}
-                sx={{ width: 18, height: 18 }}
-              />
-              <Typography variant="body2">{author.name}</Typography>
+              <Typography variant="body2">{author.id.slice(0, 10)}</Typography>
               <Typography variant="caption" color="grey.400">
                 /
               </Typography>

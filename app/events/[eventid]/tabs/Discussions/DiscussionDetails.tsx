@@ -30,14 +30,14 @@ import TopicChip from './TopicChip';
 import Link from 'next/link';
 import SortChip from './SortChip';
 import CommentDetails from './CommentDetails';
-import { PostCardProps } from './PostCard';
 import MarkdownVisualizer from './MarkdownVisualizer';
 import { useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ReplyForm from './ReplyForm';
+import { Post } from '@/utils/akasha/beam-to-markdown';
 
 interface DiscussionDetailsProps {
-  discussion: PostCardProps | undefined;
+  discussion: Post | undefined;
   eventId: string;
 }
 export type ReplyType = {
@@ -265,20 +265,20 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
       <Typography variant="h4">{discussion?.title}</Typography>
       <Stack direction="row" spacing={1} alignItems="center">
         <Avatar
-          src={discussion?.author.image}
-          alt={discussion?.author.name}
+          src={discussion?.author.id}
+          alt={discussion?.author.id}
           sx={{ width: 32, height: 32 }}
         />
         <Stack direction="column" justifyContent="space-around">
-          <Typography variant="body2">{discussion?.author.name}</Typography>
+          <Typography variant="body2">{discussion?.author.id}</Typography>
           <Typography variant="caption" color="text.secondary">
-            {discussion?.date}
+            {discussion?.createdAt}
           </Typography>
         </Stack>
       </Stack>
       <MarkdownVisualizer content={discussion?.body || ''} />
       <Box sx={{ display: 'flex', gap: 1 }}>
-        {discussion?.tags.map((tag, index) => (
+        {discussion?.tags?.map((tag, index) => (
           <TopicChip key={index} label={tag} selected={false} />
         ))}
       </Box>

@@ -1,11 +1,5 @@
 'use client';
-import React, {
-  useState,
-  useEffect,
-  Dispatch,
-  SetStateAction,
-  useRef,
-} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -14,7 +8,6 @@ import {
   Typography,
   SwipeableDrawer,
   useTheme,
-  useMediaQuery,
 } from '@mui/material';
 import { ZuButton } from '@/components/core';
 import {
@@ -23,10 +16,9 @@ import {
   FireIcon,
   SparklesIcon,
 } from '@/components/icons';
-import { useCeramicContext } from '@/context/CeramicContext';
-import { CeramicResponseType, EventEdge, Event } from '@/types';
+import { Event } from '@/types';
 import { supabase } from '@/utils/supabase/client';
-import { Anchor, Contract } from '@/types';
+import { Anchor } from '@/types';
 import { LatLngLiteral } from 'leaflet';
 import getLatLngFromAddress from '@/utils/osm';
 import TopicChip from './TopicChip';
@@ -34,57 +26,28 @@ import SortChip from './SortChip';
 import PostCard from './PostCard';
 import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
 import NewPost from './NewPost';
-import akashaSdk from '@/utils/akasha/akasha';
 import {
   AkashaReadableBeam,
-  BeamsByAuthorDid,
   extractBeamsReadableContent,
   getBeams,
-  getReadableBeamsByAuthorDid,
 } from '@/utils/akasha';
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
 
 interface IDiscussions {
   eventData: Event | undefined;
   setVerify: React.Dispatch<React.SetStateAction<boolean>> | any;
 }
 
-const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
+const Discussions: React.FC<IDiscussions> = () => {
   const [location, setLocation] = useState<string>('');
-
-  const [whitelist, setWhitelist] = useState<boolean>(false);
-  const [sponsor, setSponsor] = useState<boolean>(false);
-
-  const [isInitial, setIsInitial] = useState<boolean>(false);
-  const [isDisclaimer, setIsDisclaimer] = useState<boolean>(false);
-  const [isEmail, setIsEmail] = useState<boolean>(false);
-  const [isPayment, setIsPayment] = useState<boolean>(false);
-
-  const [isVerify, setIsVerify] = useState<boolean>(false);
-  const [isAgree, setIsAgree] = useState<boolean>(false);
-  const [isMint, setIsMint] = useState<boolean>(false);
-  const [isTransaction, setIsTransaction] = useState<boolean>(false);
-  const [isComplete, setIsComplete] = useState<boolean>(false);
-  const [tokenId, setTokenId] = useState<string>('');
-  const [isSponsorAgree, setIsSponsorAgree] = useState<boolean>(false);
-  const [isSponsorMint, setIsSponsorMint] = useState<boolean>(false);
-  const [isSponsorTransaction, setIsSponsorTransaction] =
-    useState<boolean>(false);
-  const [isSponsorComplete, setIsSponsorComplete] = useState<boolean>(false);
-  const [filteredResults, setFilteredResults] = useState<any[]>([]);
-  const [ticketMinted, setTicketMinted] = useState<any[]>([]);
-  const [mintedContract, setMintedContract] = useState<Contract>();
-  const [transactionLog, setTransactionLog] = useState<any>();
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [selectedSort, setSelectedSort] = useState<string>('Hot');
+  const [selectedSort, setSelectedSort] = useState<string>('HOT');
 
   const params = useParams();
   const eventId = params.eventid.toString();
 
   const { breakpoints } = useTheme();
-  const isMobile = useMediaQuery(breakpoints.down('sm'));
-
-  const { composeClient } = useCeramicContext();
 
   const [state, setState] = useState({
     top: false,
@@ -150,65 +113,7 @@ const Discussions: React.FC<IDiscussions> = ({ eventData, setVerify }) => {
     'Afterparty',
     'Other',
   ];
-
-  const posts = [
-    {
-      id: '1',
-      title: 'Post 1',
-      body: `
-# Welcome to our Event!
-
-![Event Banner](https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=1645&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)
-
-We're excited to have you join us for this amazing event. Here are some highlights:
-
-- Keynote speakers
-- Interactive workshops
-- Networking opportunities
-
-## Schedule
-
-| Time | Activity |
-|------|----------|
-| 9:00 AM | Registration |
-| 10:00 AM | Opening Ceremony |
-| 11:00 AM | Keynote Speech |
-
-Don't forget to check out our sponsor booths!
-
-![Sponsor Area](https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=1760&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)
-
-See you there!
-    `,
-      author: {
-        name: 'Author 1',
-        image:
-          'https://images.unsplash.com/profile-1574363570516-50a9209e8f08image?w=150&dpr=1&crop=faces&bg=%23fff&h=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      },
-      date: '2021-01-01',
-      tags: ['Tag 1', 'Tag 2'],
-      image:
-        'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=1645&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      likes: 132,
-      replies: 15,
-      eventId: eventId,
-    },
-    {
-      id: '2',
-      title: 'Post 2',
-      body: 'Post 2',
-      author: {
-        name: 'Author 1',
-        image:
-          'https://images.unsplash.com/profile-1722954188660-e468abf54fc5image?w=150&dpr=1&crop=faces&bg=%23fff&h=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      },
-      date: '2024-09-01',
-      tags: ['Tag 3', 'Tag 4'],
-      likes: 322,
-      replies: 105,
-      eventId: eventId,
-    },
-  ];
+  const [posts, setPosts] = useState<Post[]>([]);
 
   const handleTopicClick = (topic: string) => {
     setSelectedTopics((prevTopics) => {
@@ -221,6 +126,17 @@ See you there!
   };
 
   const handleSortClick = (sort: string) => {
+    if (sort === 'NEW-asc' || sort === 'NEW-desc') {
+      const sortedPosts = [...posts].sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return selectedSort === 'NEW-desc'
+          ? dateA.getTime() - dateB.getTime()
+          : dateB.getTime() - dateA.getTime();
+      });
+      setPosts(sortedPosts);
+    }
+
     setSelectedSort(sort);
   };
 
@@ -286,15 +202,15 @@ See you there!
         },
       });
       if (beams?.edges) {
-        setBeams(
-          await extractBeamsReadableContent(
-            beams.edges.map((beam) => beam?.node) as AkashaBeam[],
-          ),
+        const tmpBeans = await extractBeamsReadableContent(
+          beams.edges.map((beam) => beam?.node) as AkashaBeam[],
         );
+        setPosts(akashaBeamToMarkdown(tmpBeans, eventId));
+        setBeams(tmpBeans);
       }
     };
     fetchBeams();
-  }, []);
+  }, [eventId]);
   console.log('beams', beams);
 
   return (
@@ -414,20 +330,26 @@ See you there!
                   </Typography>
                   <SortChip
                     label="Hot"
-                    selected={selectedSort === 'Hot'}
-                    onClick={() => handleSortClick('Hot')}
+                    selected={selectedSort === 'HOT'}
+                    onClick={() => handleSortClick('HOT')}
                     icon={<FireIcon size={4} />}
                   />
                   <SortChip
                     label="Top"
-                    selected={selectedSort === 'Top'}
-                    onClick={() => handleSortClick('Top')}
+                    selected={selectedSort === 'TOP'}
+                    onClick={() => handleSortClick('TOP')}
                     icon={<ArrowUpCircleIcon size={4} />}
                   />
                   <SortChip
                     label="New"
-                    selected={selectedSort === 'New'}
-                    onClick={() => handleSortClick('New')}
+                    selected={
+                      selectedSort === 'NEW-asc' || selectedSort === 'NEW-desc'
+                    }
+                    onClick={() =>
+                      handleSortClick(
+                        selectedSort === 'NEW-asc' ? 'NEW-desc' : 'NEW-asc',
+                      )
+                    }
                     icon={<SparklesIcon size={4} />}
                   />
                 </Box>
@@ -436,7 +358,7 @@ See you there!
               <Stack direction="column" spacing="10px">
                 <Typography variant="body1">Posts</Typography>
                 {posts.map((post) => (
-                  <PostCard key={post.title} {...post} />
+                  <PostCard key={post.id} {...post} />
                 ))}
               </Stack>
             </>
