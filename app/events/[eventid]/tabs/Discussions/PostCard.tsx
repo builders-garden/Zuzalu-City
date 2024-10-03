@@ -72,7 +72,7 @@ const PostCard = ({
             </Stack>
             <Stack direction="column" gap={0}>
               <Link
-                href={`/events/${eventId}?discussionId=${id}`}
+                href={`/events/${eventId}?tab=discussions&postId=${id}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

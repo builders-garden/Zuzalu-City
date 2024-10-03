@@ -6,8 +6,10 @@ import { About, Discussions, Sessions } from './tabs';
 import { CeramicResponseType, EventEdge, Event } from '@/types';
 import { useCeramicContext } from '@/context/CeramicContext';
 import { useParams } from 'next/navigation';
+import { useQueryState } from 'nuqs';
+
 const Home = () => {
-  const [tabName, setTabName] = useState('About');
+  const [tabName, setTabName] = useQueryState('tab', { defaultValue: 'about' });
   const params = useParams();
   const [eventData, setEventData] = useState<Event>();
   const { composeClient, ceramic } = useCeramicContext();
@@ -115,10 +117,8 @@ const Home = () => {
           setDiscussionsView(true);
         }
         if (sessionStorage.getItem('tab')) {
-          setTabName(sessionStorage.getItem('tab') as string);
-          setUrlOption(sessionStorage.getItem('option') as string);
-          sessionStorage.setItem('tab', '');
-          sessionStorage.setItem('option', '');
+          sessionStorage.removeItem('tab');
+          sessionStorage.removeItem('option');
         }
       } catch (err) {
         console.log(err);
@@ -136,15 +136,13 @@ const Home = () => {
         canViewSessions={sessionView}
         canViewDiscussions={discussionsView}
       />
-      {tabName === 'About' && (
+      {tabName === 'about' && (
         <About eventData={eventData} setVerify={setVerify} />
       )}
-      {tabName === 'Sessions' && (
+      {tabName === 'sessions' && (
         <Sessions eventData={eventData} option={urlOption} />
       )}
-      {tabName === 'Discussions' && (
-        <Discussions eventData={eventData} setVerify={setVerify} />
-      )}
+      {tabName === 'discussions' && <Discussions />}
     </Stack>
   );
 };

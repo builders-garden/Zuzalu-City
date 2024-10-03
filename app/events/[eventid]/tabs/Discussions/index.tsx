@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 import {
   Stack,
   Box,
@@ -16,7 +16,6 @@ import {
   FireIcon,
   SparklesIcon,
 } from '@/components/icons';
-import { Event } from '@/types';
 import { supabase } from '@/utils/supabase/client';
 import { Anchor } from '@/types';
 import { LatLngLiteral } from 'leaflet';
@@ -34,20 +33,22 @@ import {
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
 
-interface IDiscussions {
-  eventData: Event | undefined;
-  setVerify: React.Dispatch<React.SetStateAction<boolean>> | any;
-}
-
-const Discussions: React.FC<IDiscussions> = () => {
-  const [location, setLocation] = useState<string>('');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [selectedSort, setSelectedSort] = useState<string>('HOT');
+const Discussions: React.FC = () => {
+  const { breakpoints } = useTheme();
 
   const params = useParams();
   const eventId = params.eventid.toString();
 
-  const { breakpoints } = useTheme();
+  const [location, setLocation] = useState<string>('');
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [selectedSort, setSelectedSort] = useState<string>('HOT');
+  const [isNewPostOpen, setIsNewPostOpen] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postId, setPostId] = useQueryState('postId', {
+    defaultValue: '',
+  });
+
+  const selectedPost = posts.find((post) => post.id === postId);
 
   const [state, setState] = useState({
     top: false,
@@ -113,7 +114,6 @@ const Discussions: React.FC<IDiscussions> = () => {
     'Afterparty',
     'Other',
   ];
-  const [posts, setPosts] = useState<Post[]>([]);
 
   const handleTopicClick = (topic: string) => {
     setSelectedTopics((prevTopics) => {
@@ -139,12 +139,6 @@ const Discussions: React.FC<IDiscussions> = () => {
 
     setSelectedSort(sort);
   };
-
-  const searchParams = useSearchParams();
-  const discussionId = searchParams.get('discussionId');
-  const selectedDiscussion = posts.find((post) => post.id === discussionId);
-
-  const [isNewPostOpen, setIsNewPostOpen] = useState(false);
 
   const handleOpenNewPost = () => setIsNewPostOpen(true);
   const handleCloseNewPost = () => setIsNewPostOpen(false);
@@ -188,6 +182,7 @@ const Discussions: React.FC<IDiscussions> = () => {
   // console.log('beamsByAuthor', beamsByAuthor);
 
   const [beams, setBeams] = useState<Array<AkashaReadableBeam> | null>(null);
+
   useEffect(() => {
     const fetchBeams = async () => {
       const beams = await getBeams({
@@ -259,11 +254,8 @@ const Discussions: React.FC<IDiscussions> = () => {
             },
           }}
         >
-          {discussionId && selectedDiscussion ? (
-            <DiscussionDetails
-              discussion={selectedDiscussion}
-              eventId={eventId}
-            />
+          {postId && selectedPost ? (
+            <DiscussionDetails discussion={selectedPost} eventId={eventId} />
           ) : isNewPostOpen ? (
             <NewPost eventId={eventId} onCancel={handleCloseNewPost} />
           ) : (

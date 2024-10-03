@@ -40,12 +40,12 @@ const Subbar: React.FC<SubbarProps> = ({
           direction="row"
           spacing={1}
           alignItems="center"
-          borderBottom={tabName === 'About' ? '1px solid white' : 'none'}
+          borderBottom={tabName === 'about' ? '1px solid white' : 'none'}
           sx={{ cursor: 'pointer' }}
         >
           <CalendarIcon />
           <Typography
-            onClick={() => setTabName('About')}
+            onClick={() => setTabName('about')}
             color="white"
             variant="bodyMB"
           >
@@ -56,12 +56,12 @@ const Subbar: React.FC<SubbarProps> = ({
           direction="row"
           spacing={1}
           alignItems="center"
-          borderBottom={tabName === 'Sessions' ? '1px solid white' : 'none'}
+          borderBottom={tabName === 'sessions' ? '1px solid white' : 'none'}
           sx={{ cursor: 'pointer' }}
         >
           {canViewSessions ? <SessionIcon /> : <LockIcon />}
           <Typography
-            onClick={() => canViewSessions && setTabName('Sessions')}
+            onClick={() => canViewSessions && setTabName('sessions')}
             color="white"
             variant="bodyMB"
             sx={{ cursor: canViewSessions ? 'pointer' : 'not-allowed' }}
@@ -73,12 +73,12 @@ const Subbar: React.FC<SubbarProps> = ({
           direction="row"
           spacing={1}
           alignItems="center"
-          borderBottom={tabName === 'Discussions' ? '1px solid white' : 'none'}
+          borderBottom={tabName === 'discussions' ? '1px solid white' : 'none'}
           sx={{ cursor: 'pointer' }}
         >
           {canViewDiscussions ? <ChatBubbleIcon /> : <LockIcon />}
           <Typography
-            onClick={() => canViewDiscussions && setTabName('Discussions')}
+            onClick={() => canViewDiscussions && setTabName('discussions')}
             color="white"
             variant="bodyMB"
             sx={{ cursor: canViewDiscussions ? 'pointer' : 'not-allowed' }}
