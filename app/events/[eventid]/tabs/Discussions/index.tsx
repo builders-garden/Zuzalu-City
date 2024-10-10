@@ -1,11 +1,5 @@
 'use client';
-import React, {
-  useState,
-  useEffect,
-  Dispatch,
-  SetStateAction,
-  useRef,
-} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -24,7 +18,7 @@ import {
   SparklesIcon,
 } from '@/components/icons';
 import { useCeramicContext } from '@/context/CeramicContext';
-import { CeramicResponseType, EventEdge, Event } from '@/types';
+import { Event } from '@/types';
 import { supabase } from '@/utils/supabase/client';
 import { Anchor, Contract } from '@/types';
 import { LatLngLiteral } from 'leaflet';
@@ -34,15 +28,13 @@ import SortChip from './SortChip';
 import PostCard from './PostCard';
 import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
 import NewPost from './NewPost';
-import akashaSdk from '@/utils/akasha/akasha';
 import {
   AkashaReadableBeam,
-  BeamsByAuthorDid,
   extractBeamsReadableContent,
   getBeams,
-  getReadableBeamsByAuthorDid,
 } from '@/utils/akasha';
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import ZuAuthManager from './ZuAuthManager';
 
 interface IDiscussions {
   eventData: Event | undefined;
@@ -271,6 +263,30 @@ See you there!
   // }, [userAuth?.id]);
   // console.log('beamsByAuthor', beamsByAuthor);
 
+  // const {
+  //   pcdStr,
+  //   authState,
+  //   log,
+  //   user,
+  //   auth,
+  //   logout,
+  //   nullifierHash,
+  //   setNullifierHash,
+  // } = useZupassContext();
+  // const [stage, setStage] = useState<string>('Initial');
+
+  // const handleZupass = () => {
+  //   if (!nullifierHash) {
+  //     auth();
+  //   } else {
+  //     setStage('Wallet Link');
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   handleZupass();
+  // });
+
   const [beams, setBeams] = useState<Array<AkashaReadableBeam> | null>(null);
   useEffect(() => {
     const fetchBeams = async () => {
@@ -296,6 +312,17 @@ See you there!
     fetchBeams();
   }, []);
   console.log('beams', beams);
+
+  // console.log({
+  //   pcdStr,
+  //   authState,
+  //   log,
+  //   user,
+  //   auth,
+  //   logout,
+  //   nullifierHash,
+  //   setNullifierHash,
+  // });
 
   return (
     <Stack
@@ -432,6 +459,8 @@ See you there!
                   />
                 </Box>
               </Stack>
+
+              <ZuAuthManager />
 
               <Stack direction="column" spacing="10px">
                 <Typography variant="body1">Posts</Typography>

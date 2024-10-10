@@ -1,8 +1,8 @@
-import { SessionData, ironOptions, Zuconfig } from '@/constant';
 import { authenticate } from '@pcd/zuauth/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
+import { Zuconfig, SessionData, ironOptions } from '@/constant';
 
 /**
  * Once the front-end has received a PCD from the popup window, it sends it to
@@ -19,20 +19,24 @@ export async function POST(req: NextRequest) {
     console.error(`[ERROR] No PCD specified`);
     return new Response('No PCD specified', { status: 400 });
   }
+  console.log(`[INFO] PCD:`, body.pcd);
 
   try {
     const session = await getIronSession<SessionData>(cookieStore, ironOptions);
+    console.log(`[INFO] Session: ${JSON.stringify(session)}`);
     const pcd = await authenticate(body.pcd, {
-      watermark: '12345',
+      watermark: session.watermark ?? '',
       config: Zuconfig,
       fieldsToReveal: {
-        revealAttendeeEmail: false,
-        revealAttendeeName: false,
+        revealAttendeeEmail: true,
+        revealAttendeeName: true,
         revealEventId: true,
         revealProductId: true,
       },
-      externalNullifier: undefined,
+      externalNullifier: session.watermark ?? '',
     });
+    console.log(`[INFO] PCD: ${JSON.stringify(pcd)}`);
+
     session.user = pcd.claim.partialTicket;
     await session.save();
     return Response.json({

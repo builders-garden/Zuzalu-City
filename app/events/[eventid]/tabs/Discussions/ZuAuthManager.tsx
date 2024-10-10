@@ -1,50 +1,19 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useReducer,
-} from 'react';
 import { Zuconfig } from '@/constant';
 import { zuAuthPopup } from '@pcd/zuauth/client';
-// import { authenticate } from '@pcd/zuauth/server';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 
-type ZuAuthState =
+type AuthState =
   | 'logged out'
   | 'auth-start'
   | 'authenticating'
   | 'authenticated'
   | 'error';
 
-interface ZuAuthContextType {
-  pcdStr: string;
-  nullifierHash: string;
-  authState: ZuAuthState;
-  log: string;
-  user: Record<string, string> | undefined;
-  auth: () => void;
-  logout: () => void;
-  setNullifierHash: React.Dispatch<React.SetStateAction<string>>;
-}
-
-const ZupassContext = createContext<ZuAuthContextType>({
-  pcdStr: '',
-  nullifierHash: '',
-  authState: 'logged out',
-  log: '',
-  user: undefined,
-  auth: () => {},
-  logout: () => {},
-  setNullifierHash: () => {},
-});
-
-export const ZupassProvider = ({ children }: any) => {
+export default function Home() {
   const [pcdStr, setPcdStr] = useState<string>('');
-  const [nullifierHash, setNullifierHash] = useState<string>('');
-  const [authState, setAuthState] = useState<ZuAuthState>('logged out');
+  const [authState, setAuthState] = useState<AuthState>('logged out');
   const [log, addLog] = useReducer((currentLog: string, toAdd: string) => {
     return `${currentLog}${currentLog === '' ? '' : '\n'}${toAdd}`;
   }, '');
@@ -70,6 +39,7 @@ export const ZupassProvider = ({ children }: any) => {
           watermark,
           config: Zuconfig,
         });
+
         if (result.type === 'pcd') {
           addLog('Received PCD');
           setPcdStr(result.pcdStr);
@@ -82,24 +52,7 @@ export const ZupassProvider = ({ children }: any) => {
             body: JSON.stringify({ pcd: result.pcdStr }),
           });
 
-          console.log('Response status:', loginResult.status);
-          console.log('here', loginResult);
           setUser((await loginResult.json()).user);
-          console.log('result from the Zupass wallet', result.pcdStr);
-          // const pcd = await authenticate(result.pcdStr, {
-          //   watermark: watermark,
-          //   config: Zuconfig,
-          //   fieldsToReveal: {
-          //     revealAttendeeEmail: true,
-          //     revealAttendeeName: true,
-          //     revealEventId: true,
-          //     revealProductId: true,
-          //   },
-          //   // externalNullifier: undefined,
-          //   externalNullifier: watermark,
-          // });
-          // console.log('claims from pcd', pcd.claim);
-          // setNullifierHash(pcd.claim.nullifierHash as string);
           addLog('Authenticated successfully');
           setAuthState('authenticated');
         } else if (result.type === 'popupBlocked') {
@@ -114,14 +67,14 @@ export const ZupassProvider = ({ children }: any) => {
         }
       }
     })();
-  }, [authState]);
+  }, [addLog, authState]);
 
   const auth = useCallback(() => {
     if (authState === 'logged out' || authState === 'error') {
       addLog('Beginning authentication');
       setAuthState('auth-start');
     }
-  }, [authState]);
+  }, [addLog, authState]);
 
   const logout = useCallback(() => {
     setUser(undefined);
@@ -130,22 +83,49 @@ export const ZupassProvider = ({ children }: any) => {
     addLog('Logged out');
   }, []);
 
-  return (
-    <ZupassContext.Provider
-      value={{
-        pcdStr,
-        authState,
-        log,
-        user,
-        auth,
-        logout,
-        nullifierHash,
-        setNullifierHash,
-      }}
-    >
-      {children}
-    </ZupassContext.Provider>
-  );
-};
+  const stateClasses: Record<AuthState, string> = {
+    'logged out': '',
+    'auth-start': 'text-blue-300',
+    authenticated: 'text-green-300',
+    error: 'text-red-300',
+    authenticating: 'text-blue-300',
+  };
 
-export const useZupassContext = () => useContext(ZupassContext);
+  return (
+    <main
+      className={`flex min-h-screen flex-col items-center justify-between p-24`}
+    >
+      <div className="z-10 max-w-5xl w-full text-sm">
+        <button
+          onClick={authState === 'authenticated' ? logout : auth}
+          className="border rounded border-gray-400 px-4 py-2 font-medium text-md"
+          disabled={
+            authState === 'auth-start' || authState === 'authenticating'
+          }
+        >
+          {authState === 'authenticated' ? `Log out` : `Authenticate`}
+        </button>
+        <div className="my-4">
+          Current authentication state is{' '}
+          <span className={`font-semibold ${stateClasses[authState]}`}>
+            {authState}
+          </span>{' '}
+          {user && (
+            <>
+              as{' '}
+              <span className="font-medium text-yellow-200">{`${user.attendeeName} (${user.attendeeEmail})`}</span>
+            </>
+          )}
+        </div>
+        <h3 className="text-lg font-semibold my-2">Log</h3>
+        <pre className="whitespace-pre-line border rounded-md border-gray-500 px-2 py-1">
+          {log}
+        </pre>
+        <h3 className="text-lg font-semibold mt-2">PCD</h3>
+        <pre className="whitespace-pre-line border rounded-md border-gray-500 px-2 py-1">
+          {pcdStr}
+        </pre>
+      </div>
+    </main>
+  );
+}
