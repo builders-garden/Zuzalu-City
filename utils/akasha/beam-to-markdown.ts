@@ -73,7 +73,6 @@ const processContentBlock = (
     let isTitle = contentItem.label === 'beam-title';
     switch (contentItem.propertyType) {
       case 'slate-block':
-        console.log('contentItem', contentItem);
         for (const slateBlock of contentItem.value) {
           if (isTitle) {
             blockTitle = (
@@ -120,7 +119,6 @@ const processParagraph = (
   align?: string,
 ): string => {
   let text = '';
-  console.log('process paragraph', node);
   for (const child of node) {
     switch (align) {
       case 'center':

@@ -145,13 +145,6 @@ const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
 
   return (
     <Stack spacing={3}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={onCancel}
-        sx={{ alignSelf: 'flex-start' }}
-      >
-        Back to Discussions
-      </Button>
       <Typography variant="h4">Create a new discussion</Typography>
       <Stack spacing={1}>
         <Typography variant="body1">Write a title</Typography>

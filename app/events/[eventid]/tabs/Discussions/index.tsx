@@ -1,14 +1,8 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import {
-  Stack,
-  Box,
-  Typography,
-  SwipeableDrawer,
-  useTheme,
-} from '@mui/material';
+import { Stack, Box, Typography, useTheme } from '@mui/material';
 import { ZuButton } from '@/components/core';
 import {
   PlusCircleIcon,
@@ -16,10 +10,6 @@ import {
   FireIcon,
   SparklesIcon,
 } from '@/components/icons';
-import { supabase } from '@/utils/supabase/client';
-import { Anchor } from '@/types';
-import { LatLngLiteral } from 'leaflet';
-import getLatLngFromAddress from '@/utils/osm';
 import TopicChip from './TopicChip';
 import SortChip from './SortChip';
 import PostCard from './PostCard';
@@ -39,9 +29,8 @@ const Discussions: React.FC = () => {
   const params = useParams();
   const eventId = params.eventid.toString();
 
-  const [location, setLocation] = useState<string>('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [selectedSort, setSelectedSort] = useState<string>('HOT');
+  const [selectedSort, setSelectedSort] = useState<string>('NEW-asc');
   const [isNewPostOpen, setIsNewPostOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postId, setPostId] = useQueryState('postId', {
@@ -49,57 +38,6 @@ const Discussions: React.FC = () => {
   });
 
   const selectedPost = posts.find((post) => post.id === postId);
-
-  const [state, setState] = useState({
-    top: false,
-    left: false,
-    bottom: false,
-    right: false,
-  });
-
-  const [osm, setOsm] = useState<LatLngLiteral | undefined>({
-    lat: 0,
-    lng: 0,
-  });
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  const getLocation = async () => {
-    try {
-      const { data } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('eventId', eventId);
-      if (data !== null) {
-        setLocation(data[0].name);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const toggleDrawer = (anchor: Anchor, open: boolean) => {
-    setState({ ...state, [anchor]: open });
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await getLocation();
-      } catch (err) {
-        console.log(err);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await getLatLngFromAddress(location);
-      setOsm(res);
-    };
-    fetchData();
-  }, [location]);
 
   const topics = [
     'Announcements',
@@ -125,7 +63,7 @@ const Discussions: React.FC = () => {
     });
   };
 
-  const handleSortClick = (sort: string) => {
+  const getSortedPosts = (posts: Post[], sort: string) => {
     if (sort === 'NEW-asc' || sort === 'NEW-desc') {
       const sortedPosts = [...posts].sort((a, b) => {
         const dateA = new Date(a.createdAt || 0);
@@ -134,14 +72,16 @@ const Discussions: React.FC = () => {
           ? dateA.getTime() - dateB.getTime()
           : dateB.getTime() - dateA.getTime();
       });
-      setPosts(sortedPosts);
+      return sortedPosts;
     }
-
-    setSelectedSort(sort);
+    return posts;
   };
 
-  const handleOpenNewPost = () => setIsNewPostOpen(true);
-  const handleCloseNewPost = () => setIsNewPostOpen(false);
+  const handleSortClick = (sort: string) => {
+    const sortedPosts = getSortedPosts(posts, sort);
+    setPosts(sortedPosts);
+    setSelectedSort(sort);
+  };
 
   // Akasha User Authentication
   // const [userAuth, setUserAuth] = useState<
@@ -185,44 +125,77 @@ const Discussions: React.FC = () => {
 
   useEffect(() => {
     const fetchBeams = async () => {
-      const beams = await getBeams({
-        first: 3,
-        filters: {
-          where: {
-            appID: {
-              equalTo:
-                'k2t6wzhkhabz0onog2r6n2zwtxvfn497xne1eiozqjoqnxigqvizhvwgz5dykh',
+      try {
+        // Check if we have cached data in localStorage
+        const cachedData = localStorage.getItem(`beams_${eventId}`);
+        const cachedTimestamp = localStorage.getItem(
+          `beams_${eventId}_timestamp`,
+        );
+
+        if (cachedData && cachedTimestamp) {
+          const parsedData = JSON.parse(cachedData);
+          const timestamp = parseInt(cachedTimestamp, 10);
+
+          // If the cache is less than 60 seconds old, use it
+          if (Date.now() - timestamp < 60000) {
+            setBeams(parsedData);
+            return;
+          }
+        }
+
+        // If no valid cache, fetch new data
+        const fetchedBeams = await getBeams({
+          first: 3,
+          filters: {
+            where: {
+              appID: {
+                equalTo:
+                  'k2t6wzhkhabz0onog2r6n2zwtxvfn497xne1eiozqjoqnxigqvizhvwgz5dykh',
+              },
             },
           },
-        },
-      });
-      if (beams?.edges) {
-        const tmpBeans = await extractBeamsReadableContent(
-          beams.edges.map((beam) => beam?.node) as AkashaBeam[],
-        );
-        setPosts(akashaBeamToMarkdown(tmpBeans, eventId));
-        setBeams(tmpBeans);
+        });
+
+        if (fetchedBeams?.edges) {
+          const tmpBeams = await extractBeamsReadableContent(
+            fetchedBeams.edges.map((beam) => beam?.node) as AkashaBeam[],
+          );
+
+          setBeams(tmpBeams);
+
+          // Cache the new data
+          localStorage.setItem(`beams_${eventId}`, JSON.stringify(tmpBeams));
+          localStorage.setItem(
+            `beams_${eventId}_timestamp`,
+            Date.now().toString(),
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching beams:', error);
       }
     };
+
     fetchBeams();
   }, [eventId]);
-  console.log('beams', beams);
+
+  // New useEffect to convert beams to markdown
+  useEffect(() => {
+    if (beams) {
+      const newPosts = akashaBeamToMarkdown(beams, eventId);
+      const sortedPosts = getSortedPosts(newPosts, selectedSort);
+      setPosts(sortedPosts);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beams, eventId]);
+
+  console.log({ posts, beams });
 
   return (
     <Stack
       justifyContent="center"
       alignItems="center"
       bgcolor="#222222"
-      paddingTop="40px"
-      sx={{
-        width: '100%', // Add this line
-        [breakpoints.down('md')]: {
-          paddingTop: '20px',
-        },
-        [breakpoints.down('sm')]: {
-          paddingTop: '10px',
-        },
-      }}
+      width="100%"
     >
       <Stack
         direction="row"
@@ -240,8 +213,9 @@ const Discussions: React.FC = () => {
           spacing={3}
           boxSizing={'border-box'}
           sx={{
-            width: '100%', // Add this line
-            maxWidth: '1200px', // Add this line
+            width: '100%',
+            padding: '20px',
+            maxWidth: '1200px',
             px: '240px',
             [breakpoints.down('lg')]: {
               px: '120px',
@@ -250,14 +224,17 @@ const Discussions: React.FC = () => {
               px: '20px',
             },
             [breakpoints.down('sm')]: {
-              px: '16px', // Change this from 2px to 16px for better mobile spacing
+              px: '16px',
             },
           }}
         >
           {postId && selectedPost ? (
-            <DiscussionDetails discussion={selectedPost} eventId={eventId} />
+            <DiscussionDetails discussion={selectedPost} />
           ) : isNewPostOpen ? (
-            <NewPost eventId={eventId} onCancel={handleCloseNewPost} />
+            <NewPost
+              eventId={eventId}
+              onCancel={() => setIsNewPostOpen(false)}
+            />
           ) : (
             <>
               <Stack
@@ -270,12 +247,13 @@ const Discussions: React.FC = () => {
                   variant="outlined"
                   size="small"
                   startIcon={<PlusCircleIcon size={5} />}
-                  onClick={handleOpenNewPost}
+                  onClick={() => setIsNewPostOpen(true)}
                 >
                   New Post
                 </ZuButton>
               </Stack>
 
+              {/* Topics */}
               <Stack
                 spacing="10px"
                 direction="row"
@@ -300,6 +278,7 @@ const Discussions: React.FC = () => {
                 </Box>
               </Stack>
 
+              {/* Sort */}
               <Stack spacing="10px">
                 <Box
                   sx={{
@@ -347,8 +326,8 @@ const Discussions: React.FC = () => {
                 </Box>
               </Stack>
 
+              {/* Posts */}
               <Stack direction="column" spacing="10px">
-                <Typography variant="body1">Posts</Typography>
                 {posts.map((post) => (
                   <PostCard key={post.id} {...post} />
                 ))}
@@ -356,21 +335,6 @@ const Discussions: React.FC = () => {
             </>
           )}
         </Stack>
-        <SwipeableDrawer
-          hideBackdrop={true}
-          sx={{
-            '& .MuiDrawer-paper': {
-              boxShadow: 'none',
-            },
-          }}
-          anchor="right"
-          open={state['right']}
-          onClose={() => toggleDrawer('right', false)}
-          onOpen={() => toggleDrawer('right', true)}
-          ref={ref}
-        >
-          {/* {List('right')} */}
-        </SwipeableDrawer>
       </Stack>
     </Stack>
   );
