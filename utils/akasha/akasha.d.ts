@@ -7,6 +7,7 @@ import {
   BeamLabeled,
   BeamBlockRecord,
   AkashaContentBlock,
+  ProfileImageSourceInput,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 
 export type BeamsByAuthorDid = {
@@ -81,4 +82,77 @@ export type AkashaReadableBeam = {
   /** Current version of the document */
   version: string;
   content: AkashaContentBlock[];
+};
+
+export type ZulandProfileInput = {
+  avatar?: {
+    default: ProfileImageSourceInput;
+    alternatives?: Array<ProfileImageSourceInput>;
+  };
+  description?: string;
+  name: string;
+  links?: Array<{ href: string; url: string }>;
+};
+
+// export type ZulandAuthor = {
+//   id: string;
+//   name: string;
+//   description?: string | null;
+//   appID: any;
+//   appVersionID: any;
+//   createdAt: any;
+//   nsfw?: boolean | null;
+//   did: {
+//     id: string;
+//     isViewer: boolean;
+//   };
+//   links?: Array<{
+//     href: any;
+//     label?: string | null;
+//   } | null> | null;
+//   background?: {
+//     alternatives?: Array<{
+//       src: any;
+//       width: number;
+//       height: number;
+//     } | null> | null;
+//     default: {
+//       src: any;
+//       width: number;
+//       height: number;
+//     };
+//   } | null;
+//   avatar?: {
+//     default: {
+//       src: any;
+//       width: number;
+//       height: number;
+//     };
+//     alternatives?: Array<{
+//       src: any;
+//       width: number;
+//       height: number;
+//     } | null> | null;
+//   } | null;
+//   followers: {
+//     pageInfo: {
+//       startCursor?: string | null;
+//       endCursor?: string | null;
+//       hasPreviousPage: boolean;
+//       hasNextPage: boolean;
+//     };
+//   };
+// };
+
+export type ZulandCreateAppInput = {
+  eventID: string;
+  displayName: string;
+  description: string;
+  license?: string;
+};
+
+export type ZulandCreateAppReleaseInput = {
+  applicationID: string;
+  version: string;
+  source: string;
 };
