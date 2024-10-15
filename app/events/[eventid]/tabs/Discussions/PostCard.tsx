@@ -62,7 +62,9 @@ const PostCard = ({
         <Box sx={{ padding: 0, display: 'flex' }} gap={2}>
           <Stack flex={1} justifyContent="space-between" gap={2}>
             <Stack direction="row" spacing="8px" alignItems="center">
-              <Typography variant="body2">{author.id.slice(0, 10)}</Typography>
+              <Typography variant="body2">
+                {author.akashaProfile.name}
+              </Typography>
               <Typography variant="caption" color="grey.400">
                 /
               </Typography>

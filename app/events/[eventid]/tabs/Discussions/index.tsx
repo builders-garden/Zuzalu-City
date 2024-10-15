@@ -16,12 +16,17 @@ import PostCard from './PostCard';
 import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
 import NewPost from './NewPost';
 import {
-  AkashaReadableBeam,
+  ZulandReadableBeam,
   extractBeamsReadableContent,
+  getAppByEventId,
+  getBeamById,
   getBeams,
 } from '@/utils/akasha';
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
+import akashaSdk, {
+  getReadableReflectionsByBeamId,
+} from '@/utils/akasha/akasha';
 
 const Discussions: React.FC = () => {
   const { breakpoints } = useTheme();
@@ -121,7 +126,7 @@ const Discussions: React.FC = () => {
   // }, [userAuth?.id]);
   // console.log('beamsByAuthor', beamsByAuthor);
 
-  const [beams, setBeams] = useState<Array<AkashaReadableBeam> | null>(null);
+  const [beams, setBeams] = useState<Array<ZulandReadableBeam> | null>(null);
 
   useEffect(() => {
     const fetchBeams = async () => {
@@ -143,14 +148,19 @@ const Discussions: React.FC = () => {
           }
         }
 
+        // TODO: Uncomment this line when the full events flow is implemented
+        // const app = await getAppByEventId(eventId);
+        // console.log('eventId', eventId);
+        const app = await getAppByEventId('tests');
+        // console.log('app', app);
+
         // If no valid cache, fetch new data
         const fetchedBeams = await getBeams({
-          first: 3,
+          first: 10,
           filters: {
             where: {
               appID: {
-                equalTo:
-                  'k2t6wzhkhabz0onog2r6n2zwtxvfn497xne1eiozqjoqnxigqvizhvwgz5dykh',
+                equalTo: app?.id,
               },
             },
           },
@@ -182,13 +192,14 @@ const Discussions: React.FC = () => {
   useEffect(() => {
     if (beams) {
       const newPosts = akashaBeamToMarkdown(beams, eventId);
+      // TODO: this line is unnecessary because we can use the GetBeams function directly
       const sortedPosts = getSortedPosts(newPosts, selectedSort);
       setPosts(sortedPosts);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [beams, eventId]);
 
-  console.log({ posts, beams });
+  // console.log({ posts, beams });
 
   return (
     <Stack

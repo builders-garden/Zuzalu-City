@@ -10,19 +10,29 @@ import {
   AkashaContentBlockInput,
   AkashaIndexedStreamFiltersInput,
   AkashaIndexedStreamSortingInput,
+  AkashaReflectConnection,
+  AkashaReflectEdge,
   AkashaReflectInput,
+  BlockLabeledValue,
   CreateOptionsInput,
   SetOptionsInput,
   SortOrder,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import {
-  AkashaReadableBeam,
+  ZulandReadableBeam,
   BeamsByAuthorDid,
   decodeb64SlateContent,
   ZulandCreateAppInput,
   ZulandCreateAppReleaseInput,
   ZulandProfileInput,
+  ZulandReadableReflectionResult,
+  ZulandReadbleBlock,
+  ZulandReadableReflection,
+  ZulandReadableBlockContent,
+  AkashaReadableSlateBlockContent,
+  AkashaReadableImageBlockContent,
 } from '@/utils/akasha';
+import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 
 const akashaSdk = getSDK();
 
@@ -38,6 +48,7 @@ export async function getBeams(options?: {
 }) {
   const beams = await akashaSdk.services.gql.client.GetBeams({
     first: DEFAULT_BEAMS_TAKE,
+    sorting: { createdAt: SortOrder.Desc },
     ...options,
   });
   return beams.akashaBeamIndex;
@@ -220,7 +231,7 @@ export async function getReadableBeamsByAuthorDid(
 
 export async function extractBeamReadableContent(
   beam: AkashaBeam,
-): Promise<AkashaReadableBeam> {
+): Promise<ZulandReadableBeam> {
   const readableBeam = {
     ...beam,
     content: await Promise.all(
@@ -233,28 +244,39 @@ export async function extractBeamReadableContent(
           return {
             ...encodedBlock,
             content: encodedBlock.content.map((content) => {
-              return {
-                ...content,
-                value: decodeb64SlateContent(content.value),
-              };
+              switch (content.propertyType) {
+                case 'slate-block':
+                  return {
+                    ...content,
+                    value: decodeb64SlateContent(content.value),
+                  };
+                case 'image-block':
+                  return {
+                    ...content,
+                    value: JSON.parse(content.value),
+                  };
+                default:
+                  return content;
+              }
             }),
-          };
+            order: contentBlock.order,
+          } as unknown as ZulandReadbleBlock;
         }
         return null;
       }),
     ),
     author: await getProfileByDid(beam.author.id),
   };
-  return readableBeam as AkashaReadableBeam;
+  return readableBeam as ZulandReadableBeam;
 }
 
 export async function extractBeamsReadableContent(
   beams: AkashaBeam[],
-): Promise<AkashaReadableBeam[]> {
+): Promise<ZulandReadableBeam[]> {
   const readableBeams = await Promise.all(
     beams.map(async (beam) => extractBeamReadableContent(beam)),
   );
-  return readableBeams as AkashaReadableBeam[];
+  return readableBeams as ZulandReadableBeam[];
 }
 
 export async function createReflection(
@@ -279,7 +301,9 @@ export async function createReflection(
   return createAkashaReflectionResponse?.createAkashaReflect ?? null;
 }
 
-export async function getReadableReflectionsByBeamId(beamId: string) {
+export async function getReadableReflectionsByBeamId(
+  beamId: string,
+): Promise<ZulandReadableReflectionResult | null> {
   const reflections =
     await akashaSdk.services.gql.client.GetReflectionsFromBeam(
       {
@@ -291,6 +315,8 @@ export async function getReadableReflectionsByBeamId(beamId: string) {
       },
     );
 
+  // console.log('raw reflections', reflections);
+
   if (!reflections.node) {
     return null;
   }
@@ -301,101 +327,35 @@ export async function getReadableReflectionsByBeamId(beamId: string) {
 
   const unreadableReflections = reflections.node as {
     reflectionsCount: number;
-    reflections: {
-      edges?: Array<{
-        cursor: string;
-        node?: {
-          id: string;
-          version: any;
-          active: boolean;
-          isReply?: boolean | null;
-          reflection?: any | null;
-          createdAt: any;
-          nsfw?: boolean | null;
-          author: {
-            id: string;
-            isViewer: boolean;
-          };
-          content: Array<{
-            label: string;
-            propertyType: string;
-            value: string;
-          }>;
-          beam?: {
-            id: string;
-            author: {
-              id: string;
-              isViewer: boolean;
-            };
-          } | null;
-        } | null;
-      } | null> | null;
-      pageInfo: {
-        startCursor?: string | null;
-        endCursor?: string | null;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-      };
-    };
+    reflections: AkashaReflectConnection;
   };
 
   if (!unreadableReflections.reflections.edges) {
     return null;
   }
 
-  const readableReflections = await Promise.all(
+  const readableReflections: {
+    node: ZulandReadableReflection;
+    cursor: string;
+  }[] = await Promise.all(
     unreadableReflections.reflections.edges?.map(
-      async (
-        edge: {
-          cursor: string;
-          node?: {
-            id: string;
-            version: any;
-            active: boolean;
-            isReply?: boolean | null;
-            reflection?: any | null;
-            createdAt: any;
-            nsfw?: boolean | null;
-            author: {
-              id: string;
-              isViewer: boolean;
-            };
-            content: Array<{
-              label: string;
-              propertyType: string;
-              value: string;
-            }>;
-            beam?: {
-              id: string;
-              author: {
-                id: string;
-                isViewer: boolean;
-              };
-            } | null;
-          } | null;
-        } | null,
-      ) => {
+      async (edge: AkashaReflectEdge | null) => {
         if (!edge?.node) {
-          return null;
+          throw new Error('Reflection edge has no node');
         }
-        const reflection = edge.node;
         return {
-          ...edge,
+          cursor: edge.cursor,
           node: {
-            ...reflection,
-            content: reflection.content.map(
-              (content: {
-                label: string;
-                propertyType: string;
-                value: string;
-              }) => {
-                return {
-                  ...content,
-                  value: decodeb64SlateContent(content.value),
-                };
-              },
-            ),
+            ...edge.node,
+            content: edge.node.content.map((content: BlockLabeledValue) => {
+              return convertBlockContentToReadableBlock(content);
+            }),
+            author:
+              (await getProfileByDid(edge.node.author.id)) ?? edge.node.author,
           },
+        } as {
+          node: ZulandReadableReflection;
+          cursor: string;
         };
       },
     ),
@@ -407,6 +367,29 @@ export async function getReadableReflectionsByBeamId(beamId: string) {
       edges: readableReflections,
     },
   };
+}
+
+export function convertBlockContentToReadableBlock(
+  block: BlockLabeledValue,
+): ZulandReadableBlockContent {
+  switch (block.propertyType) {
+    case 'slate-block':
+      return {
+        ...block,
+        propertyType: 'slate-block',
+        value: decodeb64SlateContent(
+          block.value,
+        ) as AkashaReadableSlateBlockContent[],
+      };
+    case 'image-block':
+      return {
+        ...block,
+        propertyType: 'image-block',
+        value: JSON.parse(block.value) as AkashaReadableImageBlockContent,
+      };
+    default:
+      return block; // return the block as it is if I don't know how to convert it
+  }
 }
 
 export async function createApp(params: ZulandCreateAppInput) {
@@ -532,14 +515,20 @@ export async function getUserProfile() {
   return profile;
 }
 
-export async function getProfileByDid(did: string) {
+export async function getProfileByDid(did: string): Promise<{
+  akashaProfile: AkashaProfile;
+  isViewer: boolean;
+} | null> {
   const profile = await akashaSdk.services.gql.client.GetProfileByDid({
     id: did,
   });
   if (JSON.stringify(profile.node) === '{}' || profile.node === undefined) {
     return null;
   }
-  return profile?.node;
+  return profile?.node as {
+    akashaProfile: AkashaProfile;
+    isViewer: boolean;
+  };
 }
 
 // this function does not accept a DID as input
@@ -616,6 +605,12 @@ export async function getProfileInterestsByDid(did: string) {
     id: did,
   });
   return response.node;
+}
+
+export async function standardDateFormat(date: string, time: boolean = true) {
+  return time
+    ? new Date(date).toLocaleString()
+    : new Date(date).toLocaleDateString();
 }
 
 export default akashaSdk;

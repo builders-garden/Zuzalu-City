@@ -3,18 +3,16 @@ import { Stack, Typography, Avatar, Button, Divider } from '@mui/material';
 import { HeartIcon, ChatBubbleIcon } from '@/components/icons';
 import { ArrowUpOnSquareIcon } from '@/components/icons/ArrowUpOnSquare';
 import ReplyForm from './ReplyForm';
+import {
+  AkashaReadableImageBlockContent,
+  AkashaReadableSlateBlockContent,
+  standardDateFormat,
+  ZulandReadableReflection,
+} from '@/utils/akasha';
+import Image from 'next/image';
 
 interface CommentDetailsProps {
-  reply: {
-    id: string; // Add this line
-    author: {
-      name: string;
-      image: string;
-    };
-    date: string;
-    content: string;
-    likes: number;
-  };
+  reply: ZulandReadableReflection;
   replyTo?: {
     author: {
       name: string;
@@ -52,18 +50,20 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
     <Stack spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center">
         <Avatar
-          src={reply.author.image}
-          alt={reply.author.name}
+          src={reply.author.akashaProfile.avatar?.default.src}
+          alt={reply.author.akashaProfile.name}
           sx={{ width: 32, height: 32 }}
         />
         <Stack>
-          <Typography variant="body2">{reply.author.name}</Typography>
+          <Typography variant="body2">
+            {reply.author.akashaProfile.name}
+          </Typography>
           <Typography variant="caption" color="text.secondary">
-            {reply.date}
+            {standardDateFormat(reply.createdAt)}
           </Typography>
         </Stack>
       </Stack>
-      {replyTo && (
+      {/* {replyTo && (
         <Stack
           spacing={1}
           sx={{
@@ -87,16 +87,55 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
             {replyTo.content}
           </Typography>
         </Stack>
-      )}
-      <Typography variant="body1">{reply.content}</Typography>
+      )} */}
+      {reply.content.map((block, key) => {
+        switch (block.propertyType) {
+          case 'slate-block':
+            return (
+              <Typography key={key} variant="body1">
+                {typeof block.value !== 'string' &&
+                  block.value.map((child, index) => (
+                    <span key={index}>
+                      {child.children.map((text, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            fontStyle: text.italic ? 'italic' : 'normal',
+                          }}
+                        >
+                          {text.text}
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+              </Typography>
+            );
+          case 'image-block':
+            return (
+              typeof block.value !== 'string' && (
+                <Image
+                  key={key}
+                  src={block.value.images[0].src}
+                  alt={
+                    (block.value as AkashaReadableImageBlockContent).caption ??
+                    ''
+                  }
+                />
+              )
+            );
+          default:
+            return `Unable to render block of type ${(block as any).propertyType}`;
+        }
+      })}
+      {/* <Typography variant="body1">{reply.content}</Typography> */}
       <Stack direction="row" spacing={2}>
-        <Button
+        {/* <Button
           startIcon={<HeartIcon size={4} />}
           variant="contained"
           size="small"
         >
           {reply.likes}
-        </Button>
+        </Button> */}
         <Button
           startIcon={<ChatBubbleIcon size={4} />}
           variant="contained"
@@ -113,7 +152,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
           Share
         </Button>
       </Stack>
-      {showReplyForm && (
+      {/* {showReplyForm && (
         <div>
           <ReplyForm
             onCancel={() => setShowReplyForm(false)}
@@ -122,7 +161,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
           />
           <div ref={replyFormRef} />
         </div>
-      )}
+      )} */}
       <Divider />
     </Stack>
   );

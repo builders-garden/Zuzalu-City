@@ -1,5 +1,10 @@
-import { AkashaReadableBeam } from '@/utils/akasha';
+import {
+  ZulandReadableBeam,
+  ZulandReadableBlockContent,
+  ZulandReadbleBlock,
+} from '@/utils/akasha';
 import { AkashaContentBlock } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 
 /**
  * Utility to convert Akasha Beam JSON to Markdown
@@ -9,8 +14,12 @@ export interface Post {
   title: string;
   body: string;
   author: {
-    id: string;
+    akashaProfile: AkashaProfile;
+    isViewer: boolean;
   };
+  // author: {
+  //   id: string;
+  // };
   tags?: string[];
   createdAt: string;
   applicationID: string;
@@ -20,7 +29,7 @@ export interface Post {
 }
 
 export const akashaBeamToMarkdown = (
-  beams: AkashaReadableBeam[],
+  beams: ZulandReadableBeam[],
   eventId: string,
 ): Post[] => {
   if (!beams || beams.length === 0) {
@@ -35,14 +44,13 @@ export const akashaBeamToMarkdown = (
       id: beam.id,
       title: title,
       body: body,
-      author: {
-        id: `${beam.id}-author`,
-      },
+      author: beam.author,
       createdAt: beam.createdAt,
       applicationID: beam.appID,
       eventId: eventId,
       likes: 0,
-      replies: 0,
+      replies: beam.reflectionsCount,
+      tags: beam.tags?.map((tag) => tag.value),
     });
   }
 
@@ -50,7 +58,7 @@ export const akashaBeamToMarkdown = (
 };
 
 const processBeam = (
-  beam: AkashaReadableBeam,
+  beam: ZulandReadableBeam,
 ): { title: string; body: string } => {
   let beamMarkdown = '';
   let beamTitle = '';
@@ -64,7 +72,7 @@ const processBeam = (
 };
 
 const processContentBlock = (
-  block: AkashaContentBlock,
+  block: ZulandReadbleBlock,
 ): { title: string; body: string } => {
   let blockMarkdown = '';
   let blockTitle = '';

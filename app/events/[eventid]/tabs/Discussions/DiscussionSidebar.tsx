@@ -8,10 +8,11 @@ interface SidebarProps {
 const DiscussionSidebar = ({ discussion }: SidebarProps) => {
   return (
     <Stack spacing={3} sx={{ position: 'sticky', top: 20, padding: '1rem' }}>
-      <Typography variant="h6">{discussion?.author.id.slice(0, 6)}</Typography>
+      <Typography variant="h6">
+        {discussion?.author.akashaProfile.id.slice(0, 6)}
+      </Typography>
       <Typography variant="body2">
-        a lemon 🍋 building onchain products and communities w/ @builders_garden
-        🌳 @urbeEth & @ETHRome 🐺
+        {discussion?.author.akashaProfile.description}
       </Typography>
       <Box
         sx={{
@@ -22,7 +23,7 @@ const DiscussionSidebar = ({ discussion }: SidebarProps) => {
       >
         <Typography variant="subtitle2">Address</Typography>
         <Typography variant="body2" color="text.primary">
-          {`${discussion?.author.id.slice(0, 6)}...${discussion?.author.id.slice(-4)}`}
+          {`${discussion?.author.akashaProfile.id.slice(0, 6)}...${discussion?.author.akashaProfile.id.slice(-4)}`}
         </Typography>
       </Box>
       <Stack
@@ -38,25 +39,25 @@ const DiscussionSidebar = ({ discussion }: SidebarProps) => {
         <Typography variant="subtitle2">Socials</Typography>
         <Stack direction="row" spacing={1}>
           <Link
-            href={`https://x.com/${discussion?.author.id}`}
+            href={`https://x.com/${discussion?.author.akashaProfile.id}`}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             X
           </Link>
           <Link
-            href={`https://discord.gg/${discussion?.author.id}`}
+            href={`https://discord.gg/${discussion?.author.akashaProfile.id}`}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             Discord
           </Link>
           <Link
-            href={`https://t.me/${discussion?.author.id}`}
+            href={`https://t.me/${discussion?.author.akashaProfile.id}`}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             Telegram
           </Link>
           <Link
-            href={`https://warpcast.com/${discussion?.author.id}`}
+            href={`https://warpcast.com/${discussion?.author.akashaProfile.id}`}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             Farcaster
