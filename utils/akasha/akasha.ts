@@ -33,6 +33,7 @@ import {
   AkashaReadableImageBlockContent,
 } from '@/utils/akasha';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
+import crypto from 'crypto';
 
 const akashaSdk = getSDK();
 
@@ -393,13 +394,18 @@ export function convertBlockContentToReadableBlock(
 }
 
 export async function createApp(params: ZulandCreateAppInput) {
+  const sha1Hash = crypto
+    .createHash('sha1')
+    .update(params.eventID)
+    .digest('hex');
+
   const createAppResult = await akashaSdk.services.gql.client.CreateApp(
     {
       i: {
         content: {
-          name: `@buildersgarden/zuland/${params.eventID}`,
-          description: params.description,
-          displayName: params.displayName,
+          name: `@bg-${sha1Hash}`,
+          description: params.description.slice(0, 2000),
+          displayName: params.displayName.slice(0, 24),
           license: params.license || 'MIT',
           createdAt: new Date().toISOString(),
           applicationType: AkashaAppApplicationType.App,
@@ -434,12 +440,14 @@ export async function createAppRelease(params: ZulandCreateAppReleaseInput) {
 }
 
 export async function getAppByEventId(eventId: string) {
+  const sha1Hash = crypto.createHash('sha1').update(eventId).digest('hex');
+
   const app = await akashaSdk.services.gql.client.GetApps({
     first: 1,
     filters: {
       where: {
         name: {
-          equalTo: `@buildersgarden/zuland-${eventId}`,
+          equalTo: `@bg-${sha1Hash}`,
           // equalTo: `@buildersgarden/zuland-tests`,
         },
       },

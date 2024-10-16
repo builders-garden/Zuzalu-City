@@ -1,21 +1,14 @@
 import * as React from 'react';
-import {
-  Stack,
-  Typography,
-  Box,
-  SwipeableDrawer,
-  useTheme,
-} from '@mui/material';
+import { Stack, Typography, useTheme } from '@mui/material';
 import OverviewButton from './OverviewButton';
 import { Event } from '@/types';
-import { Anchor, Session, SessionData, ProfileEdge, Profile } from '@/types';
-import { PlusCircleIcon } from '@/components/icons';
+import { Anchor, ProfileEdge, Profile } from '@/types';
 import { useCeramicContext } from '@/context/CeramicContext';
 import { useParams } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
-import { OutputData } from '@editorjs/editorjs';
 import { QRReader } from '@/components/modals/QRScanModal/QRReader';
 import { supabase } from '@/utils/supabase/client';
+import CreateDiscussionModal from '@/components/modals/CreateDiscussionModal';
 
 interface PropTypes {
   event?: Event;
@@ -28,7 +21,6 @@ const OverviewHeader = ({ event }: PropTypes) => {
   const eventId = params.eventid.toString();
   const profileId = profile?.id || '';
   const { breakpoints } = useTheme();
-
   const [state, setState] = React.useState({
     top: false,
     left: false,
@@ -36,6 +28,7 @@ const OverviewHeader = ({ event }: PropTypes) => {
     right: false,
   });
   const [showQRScanner, setShowQRScanner] = React.useState(false);
+  const [showDiscussion, setShowDiscussion] = React.useState(false);
   const [people, setPeople] = React.useState<Profile[]>([]);
   const [locations, setLocations] = React.useState<string[]>([]);
   const [person, setPerson] = React.useState(true);
@@ -300,6 +293,12 @@ const OverviewHeader = ({ event }: PropTypes) => {
             setShowQRScanner(!showQRScanner);
           }}
         />
+        <OverviewButton
+          type={2}
+          onClick={() => {
+            setShowDiscussion((prev) => !prev);
+          }}
+        />
       </Stack>
       {/* <SwipeableDrawer
         hideBackdrop={true}
@@ -358,6 +357,17 @@ const OverviewHeader = ({ event }: PropTypes) => {
         }
       </SwipeableDrawer> */}
       {showQRScanner && <QRReader />}
+      {showDiscussion && (
+        <CreateDiscussionModal
+          eventId={eventId}
+          showModal={showDiscussion}
+          setShowModal={setShowDiscussion}
+          eventName={event.title}
+          eventDescription={
+            event.tagline || `Brief description of ${event.title}`
+          }
+        />
+      )}
     </Stack>
   ) : (
     <></>

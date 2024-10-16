@@ -37,7 +37,7 @@ const PostCard = ({
     const postDate = new Date(dateString);
     const currentDate = new Date();
     const diffTime = Math.abs(currentDate.getTime() - postDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
@@ -58,85 +58,86 @@ const PostCard = ({
         borderColor: 'grey.600',
       }}
     >
-      <CardContentCustom sx={{ padding: '10px' }}>
-        <Box sx={{ padding: 0, display: 'flex' }} gap={2}>
-          <Stack flex={1} justifyContent="space-between" gap={2}>
-            <Stack direction="row" spacing="8px" alignItems="center">
-              <Typography variant="body2">
-                {author.akashaProfile.name}
-              </Typography>
-              <Typography variant="caption" color="grey.400">
-                /
-              </Typography>
-              <Typography variant="caption" color="grey.500">
-                {daysAgo}
-              </Typography>
-            </Stack>
-            <Stack direction="column" gap={0}>
-              <Link
-                href={`/events/${eventId}?tab=discussions&postId=${id}`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                }}
-              >
+      <Link
+        href={`/events/${eventId}?tab=discussions&postId=${id}`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          textDecoration: 'none',
+          color: 'inherit',
+        }}
+      >
+        <CardContentCustom sx={{ padding: '10px' }}>
+          <Box sx={{ padding: 0, display: 'flex' }} gap={2}>
+            <Stack flex={1} justifyContent="space-between" gap={2}>
+              <Stack direction="row" spacing="8px" alignItems="center">
+                <Typography variant="body2">
+                  {author.akashaProfile.name}
+                </Typography>
+                <Typography variant="caption" color="grey.400">
+                  /
+                </Typography>
+                <Typography variant="caption" color="grey.500">
+                  {daysAgo}
+                </Typography>
+              </Stack>
+              <Stack direction="column" gap={0}>
                 <Typography variant="h6" gutterBottom>
                   {title}
                 </Typography>
-              </Link>
-              <Box
-                sx={{
-                  minHeight: '55px',
-                  color: 'grey.500',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: '6',
-                  WebkitBoxOrient: 'vertical',
-                }}
+
+                <Box
+                  sx={{
+                    minHeight: '55px',
+                    color: 'grey.500',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: '6',
+                    WebkitBoxOrient: 'vertical',
+                  }}
+                >
+                  <MarkdownVisualizer content={body} isPreview={true} />
+                </Box>
+              </Stack>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
               >
-                <MarkdownVisualizer content={body} isPreview={true} />
-              </Box>
-            </Stack>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 1,
-                  alignItems: 'center',
-                }}
-              >
-                {tags.map((tag, index) => (
-                  <TopicChip key={index} label={tag} selected={false} />
-                ))}
-              </Box>
-              <Stack direction="row" spacing="10px" alignItems="center">
-                <PostButton
-                  icon={<HeartIcon size={4} />}
-                  label={`${likes}`}
-                  onClick={() => {}}
-                />
-                <PostButton
-                  icon={<ChatBubbleIcon size={4} />}
-                  label={`${replies}`}
-                  onClick={() => {}}
-                />
-                <PostButton
-                  icon={<ArrowUpOnSquareIcon size={3} />}
-                  onClick={() => {}}
-                />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    alignItems: 'center',
+                  }}
+                >
+                  {tags.map((tag, index) => (
+                    <TopicChip key={index} label={tag} selected={false} />
+                  ))}
+                </Box>
+                <Stack direction="row" spacing="10px" alignItems="center">
+                  <PostButton
+                    icon={<HeartIcon size={4} />}
+                    label={`${likes}`}
+                    onClick={() => {}}
+                  />
+                  <PostButton
+                    icon={<ChatBubbleIcon size={4} />}
+                    label={`${replies}`}
+                    onClick={() => {}}
+                  />
+                  <PostButton
+                    icon={<ArrowUpOnSquareIcon size={3} />}
+                    onClick={() => {}}
+                  />
+                </Stack>
               </Stack>
             </Stack>
-          </Stack>
-        </Box>
-      </CardContentCustom>
+          </Box>
+        </CardContentCustom>
+      </Link>
     </Card>
   );
 };

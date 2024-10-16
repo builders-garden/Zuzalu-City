@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
@@ -19,14 +20,11 @@ import {
   ZulandReadableBeam,
   extractBeamsReadableContent,
   getAppByEventId,
-  getBeamById,
   getBeams,
 } from '@/utils/akasha';
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
-import akashaSdk, {
-  getReadableReflectionsByBeamId,
-} from '@/utils/akasha/akasha';
+import { useQuery } from '@tanstack/react-query';
 
 const Discussions: React.FC = () => {
   const { breakpoints } = useTheme();
@@ -37,6 +35,7 @@ const Discussions: React.FC = () => {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedSort, setSelectedSort] = useState<string>('NEW-asc');
   const [isNewPostOpen, setIsNewPostOpen] = useState(false);
+  const [beams, setBeams] = useState<Array<ZulandReadableBeam> | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postId, setPostId] = useQueryState('postId', {
     defaultValue: '',
@@ -68,7 +67,7 @@ const Discussions: React.FC = () => {
     });
   };
 
-  const getSortedPosts = (posts: Post[], sort: string) => {
+  const getSortedPosts = (posts: Post[], sort: string): Post[] => {
     if (sort === 'NEW-asc' || sort === 'NEW-desc') {
       const sortedPosts = [...posts].sort((a, b) => {
         const dateA = new Date(a.createdAt || 0);
@@ -88,118 +87,46 @@ const Discussions: React.FC = () => {
     setSelectedSort(sort);
   };
 
-  // Akasha User Authentication
-  // const [userAuth, setUserAuth] = useState<
-  //   | ({
-  //       id?: string;
-  //       ethAddress?: string;
-  //     } & {
-  //       isNewUser: boolean;
-  //     })
-  //   | null
-  // >(null);
-  // useEffect(() => {
-  //   if (!userAuth) {
-  //     akashaSdk.api.auth
-  //       .signIn({
-  //         provider: 2,
-  //         checkRegistered: false,
-  //       })
-  //       .then((res) => {
-  //         console.log('auth res', res);
-  //         setUserAuth(res.data);
-  //       });
-  //   }
-  // }, [userAuth]);
+  const fetchBeams = async () => {
+    const app = await getAppByEventId(eventId);
 
-  // const [beamsByAuthor, setBeamsByAuthor] = useState<BeamsByAuthorDid | null>(
-  //   null,
-  // );
-  // const fetchBeamsByAuthorDid = async (id: string) => {
-  //   const readableAuthorBeams = await getReadableBeamsByAuthorDid(id);
-  //   setBeamsByAuthor(readableAuthorBeams);
-  // };
-  // useEffect(() => {
-  //   if (userAuth?.id) {
-  //     fetchBeamsByAuthorDid(userAuth?.id);
-  //   }
-  // }, [userAuth?.id]);
-  // console.log('beamsByAuthor', beamsByAuthor);
-
-  const [beams, setBeams] = useState<Array<ZulandReadableBeam> | null>(null);
-
-  useEffect(() => {
-    const fetchBeams = async () => {
-      try {
-        // Check if we have cached data in localStorage
-        const cachedData = localStorage.getItem(`beams_${eventId}`);
-        const cachedTimestamp = localStorage.getItem(
-          `beams_${eventId}_timestamp`,
-        );
-
-        if (cachedData && cachedTimestamp) {
-          const parsedData = JSON.parse(cachedData);
-          const timestamp = parseInt(cachedTimestamp, 10);
-
-          // If the cache is less than 60 seconds old, use it
-          if (Date.now() - timestamp < 60000) {
-            setBeams(parsedData);
-            return;
-          }
-        }
-
-        // TODO: Uncomment this line when the full events flow is implemented
-        // const app = await getAppByEventId(eventId);
-        // console.log('eventId', eventId);
-        const app = await getAppByEventId('tests');
-        // console.log('app', app);
-
-        // If no valid cache, fetch new data
-        const fetchedBeams = await getBeams({
-          first: 10,
-          filters: {
-            where: {
-              appID: {
-                equalTo: app?.id,
-              },
-            },
+    const fetchedBeams = await getBeams({
+      first: 10,
+      filters: {
+        where: {
+          appID: {
+            equalTo: app?.id,
           },
-        });
+        },
+      },
+    });
 
-        if (fetchedBeams?.edges) {
-          const tmpBeams = await extractBeamsReadableContent(
-            fetchedBeams.edges.map((beam) => beam?.node) as AkashaBeam[],
-          );
+    if (fetchedBeams?.edges) {
+      return extractBeamsReadableContent(
+        fetchedBeams.edges.map((beam) => beam?.node) as AkashaBeam[],
+      );
+    }
 
-          setBeams(tmpBeams);
+    return [];
+  };
 
-          // Cache the new data
-          localStorage.setItem(`beams_${eventId}`, JSON.stringify(tmpBeams));
-          localStorage.setItem(
-            `beams_${eventId}_timestamp`,
-            Date.now().toString(),
-          );
-        }
-      } catch (error) {
-        console.error('Error fetching beams:', error);
-      }
-    };
+  const {
+    data: fetchedBeams,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['beams', eventId],
+    queryFn: fetchBeams,
+  });
 
-    fetchBeams();
-  }, [eventId]);
-
-  // New useEffect to convert beams to markdown
   useEffect(() => {
-    if (beams) {
-      const newPosts = akashaBeamToMarkdown(beams, eventId);
-      // TODO: this line is unnecessary because we can use the GetBeams function directly
+    if (fetchedBeams) {
+      setBeams(fetchedBeams);
+      const newPosts = akashaBeamToMarkdown(fetchedBeams, eventId);
       const sortedPosts = getSortedPosts(newPosts, selectedSort);
       setPosts(sortedPosts);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beams, eventId]);
-
-  // console.log({ posts, beams });
+  }, [fetchedBeams]);
 
   return (
     <Stack

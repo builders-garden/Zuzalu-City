@@ -8,7 +8,6 @@ import {
   InputAdornment,
 } from '@mui/material';
 import TopicChip from './TopicChip';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
 import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import akashaSdk from '@/utils/akasha/akasha';
@@ -72,16 +71,22 @@ const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
     | null
   >(null);
   useEffect(() => {
-    if (!userAuth) {
-      akashaSdk.api.auth
-        .signIn({
+    async function loginAkasha() {
+      try {
+        const authRes = await akashaSdk.api.auth.signIn({
           provider: 2,
           checkRegistered: false,
-        })
-        .then((res) => {
-          console.log('auth res', res);
-          setUserAuth(res.data);
+          resumeSignIn: false,
         });
+        console.log('auth res can', authRes);
+        setUserAuth(authRes.data);
+      } catch (error) {
+        console.error('Error logging in to Akasha', error);
+      }
+    }
+
+    if (!userAuth) {
+      loginAkasha();
     }
   }, [userAuth]);
 
