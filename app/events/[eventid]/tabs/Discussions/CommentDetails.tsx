@@ -1,31 +1,24 @@
 import React, { useState, useRef } from 'react';
 import { Stack, Typography, Avatar, Button, Divider } from '@mui/material';
-import { HeartIcon, ChatBubbleIcon } from '@/components/icons';
+import { ChatBubbleIcon } from '@/components/icons';
 import { ArrowUpOnSquareIcon } from '@/components/icons/ArrowUpOnSquare';
 import ReplyForm from './ReplyForm';
 import {
   AkashaReadableImageBlockContent,
-  AkashaReadableSlateBlockContent,
   standardDateFormat,
   ZulandReadableReflection,
 } from '@/utils/akasha';
 import Image from 'next/image';
 
 interface CommentDetailsProps {
-  reply: ZulandReadableReflection;
-  replyTo?: {
-    author: {
-      name: string;
-      image?: string;
-    };
-    content: string;
-  };
+  reflection: ZulandReadableReflection;
+  parentReflection?: ZulandReadableReflection;
   onReply: (commentId: string, content: string, topics: string[]) => void;
 }
 
 const CommentDetails: React.FC<CommentDetailsProps> = ({
-  reply,
-  replyTo,
+  reflection,
+  parentReflection,
   onReply,
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -42,7 +35,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
   };
 
   const handleReplySubmit = (content: string, topics: string[]) => {
-    onReply(reply.id, content, topics);
+    onReply(reflection.id, content, topics);
     setShowReplyForm(false);
   };
 
@@ -50,20 +43,20 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
     <Stack spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center">
         <Avatar
-          src={reply.author.akashaProfile.avatar?.default.src}
-          alt={reply.author.akashaProfile.name}
+          src={reflection.author.akashaProfile.avatar?.default.src}
+          alt={reflection.author.akashaProfile.name}
           sx={{ width: 32, height: 32 }}
         />
         <Stack>
           <Typography variant="body2">
-            {reply.author.akashaProfile.name}
+            {reflection.author.akashaProfile.name}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {standardDateFormat(reply.createdAt)}
+            {standardDateFormat(reflection.createdAt)}
           </Typography>
         </Stack>
       </Stack>
-      {/* {replyTo && (
+      {parentReflection && (
         <Stack
           spacing={1}
           sx={{
@@ -75,20 +68,20 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
         >
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar
-              src={replyTo.author.image}
-              alt={replyTo.author.name}
+              src={parentReflection.author.akashaProfile.avatar?.default.src}
+              alt={parentReflection.author.akashaProfile.name}
               sx={{ width: 18, height: 18 }}
             />
             <Typography variant="body2" fontWeight="bold">
-              {replyTo.author.name}
+              {parentReflection.author.akashaProfile.name}
             </Typography>
           </Stack>
           <Typography variant="body2" noWrap>
-            {replyTo.content}
+            {JSON.stringify(parentReflection.content)}
           </Typography>
         </Stack>
-      )} */}
-      {reply.content.map((block, key) => {
+      )}
+      {reflection.content.map((block, key) => {
         switch (block.propertyType) {
           case 'slate-block':
             return (
@@ -127,14 +120,14 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
             return `Unable to render block of type ${(block as any).propertyType}`;
         }
       })}
-      {/* <Typography variant="body1">{reply.content}</Typography> */}
+      {/* <Typography variant="body1">{reflection.content}</Typography> */}
       <Stack direction="row" spacing={2}>
         {/* <Button
           startIcon={<HeartIcon size={4} />}
           variant="contained"
           size="small"
         >
-          {reply.likes}
+          {reflection.likes}
         </Button> */}
         <Button
           startIcon={<ChatBubbleIcon size={4} />}
@@ -152,16 +145,16 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
           Share
         </Button>
       </Stack>
-      {/* {showReplyForm && (
+      {showReplyForm && (
         <div>
           <ReplyForm
             onCancel={() => setShowReplyForm(false)}
             onSubmit={handleReplySubmit}
-            replyingTo={reply.author.name}
+            replyingTo={reflection.author.akashaProfile.name}
           />
           <div ref={replyFormRef} />
         </div>
-      )} */}
+      )}
       <Divider />
     </Stack>
   );

@@ -38,6 +38,8 @@ import DiscussionSidebar from './DiscussionSidebar';
 import { Anchor } from '@/types';
 import { useSearchParams } from 'next/navigation';
 import {
+  createReflection,
+  encodeSlateToBase64,
   getReadableReflectionsByBeamId,
   standardDateFormat,
   ZulandReadableReflection,
@@ -79,39 +81,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   const toggleDrawer = (anchor: Anchor, open: boolean) => {
     setState({ ...state, [anchor]: open });
   };
-  const [replies, setReplies] = useState<ReplyType[]>([
-    {
-      id: '1',
-      author: {
-        name: 'vitalik.eth',
-        image:
-          'https://images.unsplash.com/profile-1722954188660-e468abf54fc5image?w=150&dpr=1&crop=faces&bg=%23fff&h=150&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      },
-      date: '2 days ago',
-      content: 'I took time',
-      likes: 133,
-      replyTo: {
-        author: {
-          name: 'Frankkcap',
-          image:
-            'https://images.unsplash.com/profile-fb-1539620817-74cfeb7b6219.jpg?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-        },
-        content: 'Love your talk!',
-      },
-    },
-    {
-      id: '2',
-      author: {
-        name: 'satoshi.btc',
-        image:
-          'https://images.unsplash.com/profile-1529859531004-bdbd14a9ed7c?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      },
-      date: '1 day ago',
-      content: 'I took time to read your talk and it was amazing!',
-      likes: 98,
-    },
-    // Add more replies as needed
-  ]);
 
   const [selectedSort, setSelectedSort] = useState<string>('Hot');
   const [openReportModal, setOpenReportModal] = useState(false);
@@ -238,57 +207,100 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     }, 0);
   };
 
-  const handleReplySubmit = (content: string, topics: string[]) => {
+  const handleReplySubmit = async (content: string, topics: string[]) => {
     // Implement the reply submission logic here for the main discussion
     console.log('Reply submitted:', { content, topics });
     setShowReplyForm(false);
-    // Add the new reply to the replies list
-    setReplies((prevReplies) => [
-      ...prevReplies,
-      {
-        id: (prevReplies.length + 1).toString(),
-        author: {
-          name: 'Current User',
-          image:
-            'https://images.unsplash.com/profile-1529859531004-bdbd14a9ed7c?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+
+    const reflection = await createReflection({
+      beamID: postId,
+      createdAt: new Date().toISOString(),
+      active: true,
+      tags: topics,
+      content: [
+        {
+          label: '@bg/zuland/reflection',
+          propertyType: 'slate-block',
+          value: encodeSlateToBase64([
+            {
+              type: 'paragraph',
+              children: [
+                {
+                  text: content,
+                },
+              ],
+            },
+          ]),
         },
-        date: 'Just now',
-        content: content,
-        likes: 0,
-        replyTo: undefined,
-      },
-    ]);
+      ],
+    });
+    console.log('Reflection created:', reflection);
   };
 
-  const handleCommentReply = (
-    commentId: string,
+  const handleCommentReply = async (
+    parentReflectionId: string,
     content: string,
     topics: string[],
   ) => {
-    // Implement the reply submission logic here for comments
-    console.log('Reply to comment submitted:', { commentId, content, topics });
-    // Add the new reply to the replies list
-    setReplies((prevReplies) => [
-      ...prevReplies,
-      {
-        id: (prevReplies.length + 1).toString(),
-        author: {
-          name: 'Current User',
-          image:
-            'https://images.unsplash.com/profile-1529859531004-bdbd14a9ed7c?w=32&dpr=1&crop=faces&bg=%23fff&h=32&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    console.log('Reply to comment submitted:', {
+      parentReflectionId,
+      content,
+      topics,
+    });
+
+    const reflection = await createReflection({
+      beamID: postId,
+      createdAt: new Date().toISOString(),
+      active: true,
+      tags: topics,
+      isReply: true,
+      reflection: parentReflectionId,
+      content: [
+        {
+          label: '@bg/zuland/reflection',
+          propertyType: 'slate-block',
+          value: encodeSlateToBase64([
+            {
+              type: 'paragraph',
+              children: [
+                {
+                  text: content,
+                },
+              ],
+            },
+          ]),
         },
-        date: 'Just now',
-        content: content,
-        likes: 0,
-        replyTo: {
-          author: {
-            name: replies.find((r) => r.id === commentId)?.author.name || '',
-            image: replies.find((r) => r.id === commentId)?.author.image || '',
-          },
-          content: replies.find((r) => r.id === commentId)?.content || '',
-        },
-      },
-    ]);
+      ],
+    });
+    console.log('Reflection created:', reflection);
+  };
+
+  const getParentReflection = async (
+    reflection: ZulandReadableReflection,
+  ): Promise<ZulandReadableReflection | undefined> => {
+    if (!reflection.isReply) {
+      return undefined;
+    }
+
+    const parentReflection = reflections.find((r) => r.id === reflection.id);
+    if (!parentReflection) {
+      console.error(
+        'Parent reflection not found on cached reflections, fetching...',
+      );
+      // TODO: fetch parent reflection from getReadableReflectionsByReflectionId
+      const fetchReflectionById = await getReadableReflectionsByBeamId(
+        reflection.id,
+      );
+      if (!fetchReflectionById) {
+        console.error('Parent reflection not found');
+        return undefined;
+      }
+      const parentReflection = fetchReflectionById.reflections.edges
+        .map((edge) => (edge ? edge.node : null))
+        .filter((node) => node !== null) as ZulandReadableReflection[];
+      console.log('Parent reflection:', parentReflection);
+    }
+    return parentReflection;
   };
 
   return (
@@ -557,20 +569,17 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
 
             {/* Existing replies */}
             <Stack spacing={3}>
-              {reflections.map((reflection) => (
-                // <CommentDetails
-                //   key={reply.id}
-                //   reply={reply}
-                //   replyTo={reply.replyTo}
-                //   onReply={handleCommentReply}
-                // />
-                <CommentDetails
-                  key={reflection.id}
-                  reply={reflection}
-                  // replyTo={reflection.replyTo}
-                  onReply={handleCommentReply}
-                />
-              ))}
+              {reflections.map(async (reflection) => {
+                const parentReflection = await getParentReflection(reflection);
+                return (
+                  <CommentDetails
+                    key={reflection.id}
+                    reflection={reflection}
+                    parentReflection={parentReflection}
+                    onReply={handleCommentReply}
+                  />
+                );
+              })}
             </Stack>
           </>
         ) : null}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Typography, TextField, Button, Stack, Box } from '@mui/material';
 import TopicChip from './TopicChip';
+import akashaSdk from '@/utils/akasha/akasha';
 
 interface ReplyFormProps {
   onCancel: () => void;
@@ -13,8 +14,38 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   onSubmit,
   replyingTo,
 }) => {
+  // Akasha User Authentication (required for creating a beam)
+  const [userAuth, setUserAuth] = useState<
+    | ({
+        id?: string;
+        ethAddress?: string;
+      } & {
+        isNewUser: boolean;
+      })
+    | null
+  >(null);
   const [content, setContent] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function loginAkasha() {
+      try {
+        const authRes = await akashaSdk.api.auth.signIn({
+          provider: 2,
+          checkRegistered: false,
+          resumeSignIn: false,
+        });
+        console.log('auth res can', authRes);
+        setUserAuth(authRes.data);
+      } catch (error) {
+        console.error('Error logging in to Akasha', error);
+      }
+    }
+
+    if (!userAuth) {
+      loginAkasha();
+    }
+  }, [userAuth]);
 
   const topics = [
     'Announcement',
