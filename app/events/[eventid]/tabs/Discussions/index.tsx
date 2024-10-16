@@ -25,6 +25,7 @@ import {
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
 import { useQuery } from '@tanstack/react-query';
+import AkashaConnectModal from './AkashaConnectModal';
 
 const Discussions: React.FC = () => {
   const { breakpoints } = useTheme();
@@ -40,6 +41,18 @@ const Discussions: React.FC = () => {
   const [postId, setPostId] = useQueryState('postId', {
     defaultValue: '',
   });
+  const [currentUser, setCurrentUser] = useState<
+    | ({
+        id?: string;
+        ethAddress?: string;
+      } & {
+        isNewUser?: boolean;
+      })
+    | undefined
+  >(undefined);
+
+  const [showCheckUserConnectionModal, setShowCheckUserConnectionModal] =
+    useState(false);
 
   const selectedPost = posts.find((post) => post.id === postId);
 
@@ -86,6 +99,14 @@ const Discussions: React.FC = () => {
     setPosts(sortedPosts);
     setSelectedSort(sort);
   };
+
+  // const handleGetCurrentUser = async () => {
+  //   if (!currentUser) {
+  //     const currentUserResult = await akashaSdk.api.auth.getCurrentUser();
+  //     console.log('currentUserResult', currentUserResult);
+  //     setCurrentUser(currentUserResult ? currentUserResult : undefined);
+  //   }
+  // };
 
   const fetchBeams = async () => {
     const app = await getAppByEventId(eventId);
@@ -185,7 +206,13 @@ const Discussions: React.FC = () => {
                   variant="outlined"
                   size="small"
                   startIcon={<PlusCircleIcon size={5} />}
-                  onClick={() => setIsNewPostOpen(true)}
+                  onClick={() => {
+                    if (currentUser === undefined) {
+                      setShowCheckUserConnectionModal(true);
+                    } else {
+                      setIsNewPostOpen(true);
+                    }
+                  }}
                 >
                   New Post
                 </ZuButton>
@@ -270,6 +297,15 @@ const Discussions: React.FC = () => {
                   <PostCard key={post.id} {...post} />
                 ))}
               </Stack>
+
+              {showCheckUserConnectionModal && (
+                <AkashaConnectModal
+                  showModal={showCheckUserConnectionModal}
+                  setShowModal={setShowCheckUserConnectionModal}
+                  setShowAuthenticatedPart={setIsNewPostOpen}
+                  setParentUserAuth={setCurrentUser}
+                />
+              )}
             </>
           )}
         </Stack>
