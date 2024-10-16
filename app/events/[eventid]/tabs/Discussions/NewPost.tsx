@@ -10,11 +10,14 @@ import {
 import TopicChip from './TopicChip';
 import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
 import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
-import akashaSdk from '@/utils/akasha/akasha';
 
 interface NewPostProps {
   eventId: string;
   onCancel: () => void;
+  currentUser: {
+    id?: string;
+    ethAddress?: string;
+  };
 }
 
 const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
@@ -54,50 +57,19 @@ const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
     console.log({ title, content, selectedTopics, eventId });
     try {
       createBeamPassingBlocks();
+      onCancel(); // Go back to the discussions list after posting
     } catch (error) {
       console.error('Error creating beam', error);
       onCancel(); // Go back to the discussions list after posting
     }
   };
 
-  // Akasha User Authentication (required for creating a beam)
-  const [userAuth, setUserAuth] = useState<
-    | ({
-        id?: string;
-        ethAddress?: string;
-      } & {
-        isNewUser: boolean;
-      })
-    | null
-  >(null);
-  useEffect(() => {
-    async function loginAkasha() {
-      try {
-        const authRes = await akashaSdk.api.auth.signIn({
-          provider: 2,
-          checkRegistered: false,
-          resumeSignIn: false,
-        });
-        console.log('auth res can', authRes);
-        setUserAuth(authRes.data);
-      } catch (error) {
-        console.error('Error logging in to Akasha', error);
-      }
-    }
-
-    if (!userAuth) {
-      loginAkasha();
-    }
-  }, [userAuth]);
-
   function createBeamPassingBlocks() {
     if (!title || !content) {
       throw new Error('Beam title and content are required');
     }
     createBeamFromBlocks({
-      appID: 'k2t6wzhkhabz0onog2r6n2zwtxvfn497xne1eiozqjoqnxigqvizhvwgz5dykh',
-      appVersionID:
-        'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
+      eventId,
       active: true,
       blocks: [
         {

@@ -189,10 +189,11 @@ const Discussions: React.FC = () => {
         >
           {postId && selectedPost ? (
             <DiscussionDetails discussion={selectedPost} />
-          ) : isNewPostOpen ? (
+          ) : isNewPostOpen && currentUser ? (
             <NewPost
               eventId={eventId}
               onCancel={() => setIsNewPostOpen(false)}
+              currentUser={currentUser}
             />
           ) : (
             <>

@@ -131,11 +131,22 @@ export async function createBeam(beam: AkashaBeamInput) {
 }
 
 export async function createBeamFromBlocks(params: {
-  appID: string;
-  appVersionID: string;
+  eventId: string;
   active: boolean;
   blocks: AkashaContentBlockInput[];
 }) {
+  // step 0: retrieve the app and app version ID from the event ID
+  const app = await getAppByEventId(params.eventId);
+  if (!app) {
+    throw new Error('App not found');
+  }
+  const appVersionID = app.releases?.edges?.[0]?.node?.id;
+  if (!appVersionID) {
+    throw new Error(
+      'App version not found. An app version is required to create a beam',
+    );
+  }
+
   // step 1: create the blocks
   console.log('creating blocks before Beam creation...');
   const blockCreationResults = await Promise.all(
@@ -151,8 +162,8 @@ export async function createBeamFromBlocks(params: {
   console.log('Creating beam...');
   const beamToCreate: AkashaBeamInput = {
     active: params.active,
-    appID: params.appID,
-    appVersionID: params.appVersionID,
+    appID: app.id,
+    appVersionID: appVersionID,
     createdAt: new Date().toISOString(),
     content: beamContent,
   };
