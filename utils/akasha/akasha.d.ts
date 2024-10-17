@@ -181,6 +181,90 @@ export type AkashaReadableSlateBlockContent = {
   }[];
 };
 
+export type AkashaGetReflectionsFromBeamResponse = {
+  node: {
+    reflectionsCount: number;
+    reflections: {
+      edges?: Array<{
+        cursor: string;
+        node?: {
+          id: string;
+          version: any;
+          active: boolean;
+          isReply?: boolean | null;
+          reflection?: any | null;
+          createdAt: any;
+          nsfw?: boolean | null;
+          author: {
+            id: string;
+            isViewer: boolean;
+          };
+          content: Array<{
+            label: string;
+            propertyType: string;
+            value: string;
+          }>;
+          beam?: {
+            id: string;
+            author: {
+              id: string;
+              isViewer: boolean;
+            };
+          } | null;
+        } | null;
+      } | null> | null;
+      pageInfo: {
+        startCursor?: string | null;
+        endCursor?: string | null;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    };
+  };
+};
+
+export type AkashaReflectionsFromBeam = {
+  reflectionsCount: number;
+  reflections: AkashaReflections;
+};
+
+export type AkashaReflections = {
+  edges?: Array<{
+    cursor: string;
+    node?: {
+      id: string;
+      version: any;
+      active: boolean;
+      isReply?: boolean | null;
+      reflection?: any | null;
+      createdAt: any;
+      nsfw?: boolean | null;
+      author: {
+        id: string;
+        isViewer: boolean;
+      };
+      content: Array<{
+        label: string;
+        propertyType: string;
+        value: string;
+      }>;
+      beam?: {
+        id: string;
+        author: {
+          id: string;
+          isViewer: boolean;
+        };
+      } | null;
+    } | null;
+  } | null> | null;
+  pageInfo: {
+    startCursor?: string | null;
+    endCursor?: string | null;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+};
+
 export type AkashaReadableImageBlockContent = {
   images: {
     src: string;
