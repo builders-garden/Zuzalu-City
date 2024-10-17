@@ -13,7 +13,11 @@ import Image from 'next/image';
 interface CommentDetailsProps {
   reflection: ZulandReadableReflection;
   parentReflection?: ZulandReadableReflection;
-  onReply: (commentId: string, content: string, topics: string[]) => void;
+  onReply: (
+    content: string,
+    topics: string[],
+    parentReflectionId: string,
+  ) => void;
 }
 
 const CommentDetails: React.FC<CommentDetailsProps> = ({
@@ -35,7 +39,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
   };
 
   const handleReplySubmit = (content: string, topics: string[]) => {
-    onReply(reflection.id, content, topics);
+    onReply(content, topics, reflection.id);
     setShowReplyForm(false);
   };
 

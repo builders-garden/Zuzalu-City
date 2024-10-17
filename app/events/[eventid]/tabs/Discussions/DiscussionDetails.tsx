@@ -36,7 +36,7 @@ import ReplyForm from './ReplyForm';
 import { Post } from '@/utils/akasha/beam-to-markdown';
 import DiscussionSidebar from './DiscussionSidebar';
 import { Anchor } from '@/types';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import {
   createReflection,
   encodeSlateToBase64,
@@ -44,6 +44,7 @@ import {
   standardDateFormat,
   ZulandReadableReflection,
 } from '@/utils/akasha';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 interface DiscussionDetailsProps {
   discussion: Post | undefined;
@@ -78,9 +79,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   });
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const toggleDrawer = (anchor: Anchor, open: boolean) => {
-    setState({ ...state, [anchor]: open });
-  };
+  const queryClient = useQueryClient();
 
   const [selectedSort, setSelectedSort] = useState<string>('Hot');
   const [openReportModal, setOpenReportModal] = useState(false);
@@ -98,22 +97,29 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     [],
   );
 
+  const { data: reflectionsData, isLoading } = useQuery({
+    queryKey: ['reflections', postId],
+    queryFn: async () => {
+      if (!postId) return null;
+      return await getReadableReflectionsByBeamId(postId);
+    },
+    enabled: !!postId,
+  });
+
   useEffect(() => {
-    async function handleFetchReflections(postId: string) {
-      const reflectionsResult = await getReadableReflectionsByBeamId(postId);
-      if (reflectionsResult) {
-        setReflections(
-          reflectionsResult.reflections.edges
-            .map((edge) => (edge ? edge.node : null))
-            .filter((node) => node !== null) as ZulandReadableReflection[],
-        );
-        setReflectionCount(reflectionsResult.reflectionsCount);
-      }
+    if (reflectionsData) {
+      setReflections(
+        reflectionsData.reflections.edges
+          .map((edge) => (edge ? edge.node : null))
+          .filter((node) => node !== null) as ZulandReadableReflection[],
+      );
+      setReflectionCount(reflectionsData.reflectionsCount);
     }
-    if (postId) {
-      handleFetchReflections(postId);
-    }
-  }, [postId]);
+  }, [reflectionsData]);
+
+  const toggleDrawer = (anchor: Anchor, open: boolean) => {
+    setState({ ...state, [anchor]: open });
+  };
 
   const handleSortClick = (sort: string) => {
     setSelectedSort(sort);
@@ -207,72 +213,60 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     }, 0);
   };
 
-  const handleReplySubmit = async (content: string, topics: string[]) => {
-    // Implement the reply submission logic here for the main discussion
-    console.log('Reply submitted:', { content, topics });
-    setShowReplyForm(false);
+  const params = useParams();
+  const eventId = params.eventid.toString();
 
-    const reflection = await createReflection({
-      beamID: postId,
-      createdAt: new Date().toISOString(),
-      active: true,
-      tags: topics,
-      content: [
-        {
-          label: '@bg/zuland/reflection',
-          propertyType: 'slate-block',
-          value: encodeSlateToBase64([
-            {
-              type: 'paragraph',
-              children: [
-                {
-                  text: content,
-                },
-              ],
-            },
-          ]),
-        },
-      ],
-    });
-    console.log('Reflection created:', reflection);
-  };
-
-  const handleCommentReply = async (
-    parentReflectionId: string,
+  const handleReplySubmit = async (
     content: string,
     topics: string[],
+    parentReflectionId: string = '',
   ) => {
-    console.log('Reply to comment submitted:', {
-      parentReflectionId,
-      content,
-      topics,
-    });
+    setShowReplyForm(false);
 
-    const reflection = await createReflection({
-      beamID: postId,
-      createdAt: new Date().toISOString(),
-      active: true,
-      tags: topics,
-      isReply: true,
-      reflection: parentReflectionId,
-      content: [
-        {
-          label: '@bg/zuland/reflection',
-          propertyType: 'slate-block',
-          value: encodeSlateToBase64([
-            {
-              type: 'paragraph',
-              children: [
-                {
-                  text: content,
-                },
-              ],
-            },
-          ]),
-        },
-      ],
-    });
-    console.log('Reflection created:', reflection);
+    try {
+      await createReflection({
+        beamID: postId,
+        createdAt: new Date().toISOString(),
+        active: true,
+        tags: topics,
+        isReply: parentReflectionId !== '' ? true : null,
+        reflection: parentReflectionId !== '' ? parentReflectionId : null,
+        content: [
+          {
+            label: '@bg/zuland/reflection',
+            propertyType: 'slate-block',
+            value: encodeSlateToBase64([
+              {
+                type: 'paragraph',
+                children: [
+                  {
+                    text: content,
+                  },
+                ],
+              },
+            ]),
+          },
+        ],
+      });
+
+      // Refetch reflections after creating a new one
+      if (postId) {
+        queryClient.invalidateQueries({ queryKey: ['reflections', postId] });
+        queryClient.invalidateQueries({ queryKey: ['beams', eventId] });
+        const reflectionsResult = await getReadableReflectionsByBeamId(postId);
+        if (reflectionsResult) {
+          setReflections(
+            reflectionsResult.reflections.edges
+              .map((edge) => (edge ? edge.node : null))
+              .filter((node) => node !== null) as ZulandReadableReflection[],
+          );
+          setReflectionCount(reflectionsResult.reflectionsCount);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating reflection:', error);
+      // Optionally, show an error message to the user
+    }
   };
 
   const getParentReflection = async (
@@ -576,7 +570,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
                     key={reflection.id}
                     reflection={reflection}
                     parentReflection={parentReflection}
-                    onReply={handleCommentReply}
+                    onReply={handleReplySubmit}
                   />
                 );
               })}

@@ -24,7 +24,7 @@ import {
 } from '@/utils/akasha';
 import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AkashaConnectModal from './AkashaConnectModal';
 
 const Discussions: React.FC = () => {
@@ -131,6 +131,8 @@ const Discussions: React.FC = () => {
     return [];
   };
 
+  const queryClient = useQueryClient();
+
   const {
     data: fetchedBeams,
     isLoading,
@@ -139,6 +141,11 @@ const Discussions: React.FC = () => {
     queryKey: ['beams', eventId],
     queryFn: fetchBeams,
   });
+
+  const handleNewPostCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['beams', eventId] });
+    setIsNewPostOpen(false);
+  };
 
   useEffect(() => {
     if (fetchedBeams) {
@@ -193,6 +200,7 @@ const Discussions: React.FC = () => {
             <NewPost
               eventId={eventId}
               onCancel={() => setIsNewPostOpen(false)}
+              onPostCreated={handleNewPostCreated}
               currentUser={currentUser}
             />
           ) : (

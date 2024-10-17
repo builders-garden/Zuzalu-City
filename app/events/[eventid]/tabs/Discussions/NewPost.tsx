@@ -14,13 +14,19 @@ import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-t
 interface NewPostProps {
   eventId: string;
   onCancel: () => void;
+  onPostCreated: () => void;
   currentUser: {
     id?: string;
     ethAddress?: string;
   };
 }
 
-const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
+const NewPost: React.FC<NewPostProps> = ({
+  eventId,
+  onCancel,
+  onPostCreated,
+  currentUser,
+}) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -52,72 +58,71 @@ const NewPost: React.FC<NewPostProps> = ({ eventId, onCancel }) => {
     setTitle(newTitle);
   };
 
-  const handleSubmit = () => {
-    // Implement post submission logic here
+  const handleSubmit = async () => {
     console.log({ title, content, selectedTopics, eventId });
     try {
-      createBeamPassingBlocks();
-      onCancel(); // Go back to the discussions list after posting
+      await createBeamPassingBlocks();
+      onPostCreated(); // Call this instead of onCancel
     } catch (error) {
       console.error('Error creating beam', error);
-      onCancel(); // Go back to the discussions list after posting
+      onCancel();
     }
   };
 
-  function createBeamPassingBlocks() {
+  async function createBeamPassingBlocks() {
     if (!title || !content) {
       throw new Error('Beam title and content are required');
     }
-    createBeamFromBlocks({
-      eventId,
-      active: true,
-      blocks: [
-        {
-          active: true,
-          content: [
-            {
-              label: 'beam-title',
-              propertyType: 'slate-block',
-              value: encodeSlateToBase64([
-                {
-                  type: 'paragraph',
-                  children: [
-                    {
-                      text: title,
-                    },
-                  ],
-                },
-              ]),
-            },
-            {
-              label: 'beam-content',
-              propertyType: 'slate-block',
-              value: encodeSlateToBase64([
-                {
-                  type: 'paragraph',
-                  children: [
-                    {
-                      text: content,
-                    },
-                  ],
-                },
-              ]),
-            },
-          ],
-          createdAt: new Date().toISOString(),
-          kind: AkashaContentBlockBlockDef.Text,
-          nsfw: false,
-          appVersionID:
-            'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
-        },
-      ],
-    })
-      .then((res) => {
-        console.log('createBeamFromBlocks res', res);
-      })
-      .catch((err) => {
-        console.error('createBeamFromBlocks error', err);
+    try {
+      const res = await createBeamFromBlocks({
+        eventId,
+        active: true,
+        blocks: [
+          {
+            active: true,
+            content: [
+              {
+                label: 'beam-title',
+                propertyType: 'slate-block',
+                value: encodeSlateToBase64([
+                  {
+                    type: 'paragraph',
+                    children: [
+                      {
+                        text: title,
+                      },
+                    ],
+                  },
+                ]),
+              },
+              {
+                label: 'beam-content',
+                propertyType: 'slate-block',
+                value: encodeSlateToBase64([
+                  {
+                    type: 'paragraph',
+                    children: [
+                      {
+                        text: content,
+                      },
+                    ],
+                  },
+                ]),
+              },
+            ],
+            createdAt: new Date().toISOString(),
+            kind: AkashaContentBlockBlockDef.Text,
+            nsfw: false,
+            appVersionID:
+              'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
+          },
+        ],
       });
+      console.log('createBeamFromBlocks res', res);
+    } catch (err) {
+      console.error('createBeamFromBlocks error', err);
+      throw err;
+    }
   }
 
   return (
