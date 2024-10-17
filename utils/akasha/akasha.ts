@@ -13,6 +13,7 @@ import {
   AkashaReflectConnection,
   AkashaReflectEdge,
   AkashaReflectInput,
+  AkashaReflectSortingInput,
   BlockLabeledValue,
   CreateOptionsInput,
   SetOptionsInput,
@@ -31,6 +32,8 @@ import {
   ZulandReadableBlockContent,
   AkashaReadableSlateBlockContent,
   AkashaReadableImageBlockContent,
+  ZulandComplexReflectOfReflections,
+  ZulandReadableReflectionWithChildren,
 } from '@/utils/akasha';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 import crypto from 'crypto';
@@ -346,39 +349,138 @@ export async function getReadableReflectionsByBeamId(
     return null;
   }
 
-  const readableReflections: {
-    node: ZulandReadableReflection;
-    cursor: string;
-  }[] = await Promise.all(
-    unreadableReflections.reflections.edges?.map(
-      async (edge: AkashaReflectEdge | null) => {
-        if (!edge?.node) {
-          throw new Error('Reflection edge has no node');
-        }
-        return {
-          cursor: edge.cursor,
-          node: {
-            ...edge.node,
-            content: edge.node.content.map((content: BlockLabeledValue) => {
-              return convertBlockContentToReadableBlock(content);
-            }),
-            author:
-              (await getProfileByDid(edge.node.author.id)) ?? edge.node.author,
-          },
-        } as {
-          node: ZulandReadableReflection;
-          cursor: string;
-        };
-      },
-    ),
+  const readableReflections: (
+    | {
+        node: ZulandReadableReflection;
+        cursor: string;
+      }
+    | undefined
+  )[] = await extractReadableReflections(
+    unreadableReflections.reflections.edges as AkashaReflectEdge[],
   );
+
   return {
     ...unreadableReflections,
     reflections: {
       ...unreadableReflections.reflections,
-      edges: readableReflections,
+      edges: readableReflections.filter(
+        (reflection) => reflection !== undefined,
+      ),
     },
   };
+}
+
+export async function extractReadableReflections(
+  reflections: AkashaReflectEdge[],
+): Promise<
+  {
+    node: ZulandReadableReflection;
+    cursor: string;
+  }[]
+> {
+  const readableReflections = await Promise.all(
+    reflections.map(async (reflection) => {
+      return await extractReadableReflection(reflection);
+    }),
+  );
+  return readableReflections;
+}
+
+export async function extractReadableReflection(
+  reflection: AkashaReflectEdge,
+): Promise<{
+  node: ZulandReadableReflection;
+  cursor: string;
+}> {
+  return {
+    cursor: reflection.cursor,
+    node: reflection.node
+      ? {
+          ...reflection.node,
+          content: reflection.node.content.map((content: BlockLabeledValue) => {
+            return convertBlockContentToReadableBlock(content);
+          }),
+          author:
+            (await getProfileByDid(reflection.node.author.id)) ??
+            reflection.node.author,
+        }
+      : null,
+  } as {
+    node: ZulandReadableReflection;
+    cursor: string;
+  };
+}
+
+export async function getReadableReflectionsByReflectionId(
+  id: string,
+  after?: string,
+  before?: string,
+  first?: number,
+  last?: number,
+  sorting?: AkashaReflectSortingInput,
+): Promise<ZulandComplexReflectOfReflections> {
+  const res = await akashaSdk.services.gql.client.GetReflectReflections({
+    id,
+    first: first ?? DEFAULT_BEAMS_TAKE,
+    last,
+    after,
+    before,
+    sorting: sorting ?? { createdAt: SortOrder.Desc },
+  });
+
+  if (!res.akashaReflectIndex?.edges) {
+    return {
+      pageInfo: res.akashaReflectIndex?.pageInfo ?? null,
+      edge: [],
+    };
+  }
+
+  const readableReflections = await extractReadableReflections(
+    res.akashaReflectIndex?.edges as AkashaReflectEdge[],
+  );
+
+  const readableReflectionsWithChildren: {
+    node: ZulandReadableReflectionWithChildren;
+    cursor: string;
+  }[] = [];
+  // foreach reflection now get the reflections of the reflection
+  for (const reflection of readableReflections) {
+    const childrenReflections = await getReadableReflectionsByReflectionId(
+      reflection.node.id,
+    );
+    if (childrenReflections.edge.length > 0) {
+      readableReflectionsWithChildren.push({
+        node: {
+          ...reflection.node,
+          children: childrenReflections,
+        },
+        cursor: reflection.cursor,
+      });
+    } else {
+      readableReflectionsWithChildren.push({
+        node: {
+          ...reflection.node,
+          children: null,
+        },
+        cursor: reflection.cursor,
+      });
+    }
+  }
+
+  return {
+    pageInfo: res.akashaReflectIndex?.pageInfo,
+    edge: readableReflectionsWithChildren,
+  };
+}
+
+export async function getReflectionsTest(id: string) {
+  const res = await akashaSdk.services.gql.client.GetReflectReflections({
+    id,
+    first: DEFAULT_BEAMS_TAKE,
+  });
+  // console.log('reflections by reflection id', res);
+
+  return res.akashaReflectIndex;
 }
 
 export function convertBlockContentToReadableBlock(

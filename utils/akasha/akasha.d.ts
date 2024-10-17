@@ -206,8 +206,22 @@ export type ZulandReadableBlockContent =
       value: AkashaReadableImageBlockContent;
     }
   | BlockLabeledValue;
-// | {
-//     label: string;
-//     propertyType: string;
-//     value: string;
-//   }
+
+export type ZulandComplexReflectOfReflections = {
+  edge: {
+    node: ZulandReadableReflectionWithChildren;
+    cursor: string;
+  }[];
+  pageInfo: AkashaPageInfo | null;
+};
+
+export type ZulandReadableReflectionWithChildren = ZulandReadableReflection & {
+  children?: ZulandComplexReflectOfReflections | null;
+};
+
+export type AkashaPageInfo = {
+  startCursor?: string | null;
+  endCursor?: string | null;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
