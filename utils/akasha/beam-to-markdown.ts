@@ -93,6 +93,20 @@ const processContentBlock = (
           blockMarkdown += processSlateBlock(slateBlock);
         }
         break;
+      case 'image-block': {
+        console.log('image-block contentItem.value', contentItem.value);
+        const imgBlock = contentItem.value as unknown as {
+          caption?: string;
+          align?: string;
+          images: {
+            src: string;
+            name: string;
+            size: { width: number; height: number };
+          }[];
+        };
+        blockMarkdown += processImages(imgBlock);
+        break;
+      }
     }
   }
 
@@ -206,4 +220,37 @@ const processBulletedList = (
   return markdown;
 };
 
-// ... existing code ...
+const processImages = (imageData: {
+  caption?: string;
+  align?: string;
+  images: {
+    src: string;
+    name: string;
+    size: { width: number; height: number };
+  }[];
+}): string => {
+  if (!imageData) {
+    return '';
+  }
+  console.log('imageData', imageData);
+  const alt = imageData.images[0].name || '';
+  const caption = imageData.caption || '';
+  let markdown = '';
+
+  for (const img of imageData.images) {
+    markdown += `![${alt}](${buildIpfsUrl(img.src)})`;
+  }
+  if (caption) {
+    markdown += `\n*${caption}*`;
+  }
+
+  return markdown;
+};
+
+const buildIpfsUrl = (ipfsUrl: string): string => {
+  if (ipfsUrl.startsWith('ipfs://')) {
+    const ipfsHash = ipfsUrl.split('ipfs://')[1];
+    return `https://${ipfsHash}.ipfs.w3s.link`;
+  }
+  return ipfsUrl;
+};

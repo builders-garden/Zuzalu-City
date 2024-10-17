@@ -140,7 +140,10 @@ export async function getReadableReflectionsByBeamId(
     reflections: {
       ...unreadableReflections.reflections,
       edges: readableReflections.filter(
-        (reflection) => reflection !== undefined,
+        (
+          reflection,
+        ): reflection is { node: ZulandReadableReflection; cursor: string } =>
+          reflection !== undefined,
       ),
     },
   };
@@ -222,7 +225,10 @@ export async function getTopReadableReflectionsByBeamId(
     reflections: {
       ...unreadableReflections.reflections,
       edges: readableReflections.filter(
-        (reflection) => reflection !== undefined,
+        (
+          reflection,
+        ): reflection is { node: ZulandReadableReflection; cursor: string } =>
+          reflection !== undefined,
       ),
     },
   };

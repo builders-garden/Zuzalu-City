@@ -89,6 +89,8 @@ import { FlagIcon } from './Flag';
 import WhatsappIcon from './Whatsapp';
 import TwitterIcon from './Twitter';
 import FarcasterIcon from './Farcaster';
+import DiscordIcon from './Discord';
+import TelegramIcon from './Telegram';
 
 export {
   HomeIcon,
@@ -182,4 +184,6 @@ export {
   TwitterIcon,
   UserCircleIcon,
   WhatsappIcon,
+  DiscordIcon,
+  TelegramIcon,
 };

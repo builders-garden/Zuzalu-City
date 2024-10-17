@@ -8,6 +8,7 @@ import { FarcasterIcon } from '@/components/icons';
 import { Box, Stack } from '@mui/material';
 
 import { IconButton } from '@mui/material';
+import { ZuButton } from '@/components/core';
 
 interface ShareModalProps {
   discussionTitle: string;
@@ -94,15 +95,39 @@ const ShareModal = ({
           sx={{ mb: 2 }}
         />
         <Stack direction="row" spacing={2} justifyContent="center">
-          <IconButton onClick={shareToTwitter}>
+          <ZuButton
+            onClick={shareToTwitter}
+            sx={{
+              color: 'white',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '20px 10px',
+            }}
+          >
             <TwitterIcon />
-          </IconButton>
-          <IconButton onClick={shareToFarcaster}>
+          </ZuButton>
+          <ZuButton
+            onClick={shareToFarcaster}
+            sx={{
+              color: 'white',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '20px 10px',
+            }}
+          >
             <FarcasterIcon />
-          </IconButton>
-          <IconButton onClick={shareToWhatsApp}>
+          </ZuButton>
+          <ZuButton
+            onClick={shareToWhatsApp}
+            sx={{
+              color: 'white',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '20px 10px',
+            }}
+          >
             <WhatsappIcon />
-          </IconButton>
+          </ZuButton>
         </Stack>
       </Box>
     </Modal>

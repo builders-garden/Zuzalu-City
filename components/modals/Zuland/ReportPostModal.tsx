@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { FlagIcon } from '@/components/icons/Flag';
-import { Button } from '@mui/material';
 
 import { Box, Chip, Typography } from '@mui/material';
 
 import { Modal } from '@mui/material';
+import { ZuButton } from '@/components/core';
 
 interface ReportPostModalProps {
   openReportModal: boolean;
@@ -94,22 +94,42 @@ const ReportPostModal = ({
             mt: 2,
           }}
         >
-          <Button
+          <ZuButton
             onClick={handleCloseReportModal}
-            variant="outlined"
-            color="secondary"
+            sx={{
+              color: 'white',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '4px 20px',
+              fontSize: '14px',
+              fontWeight: '700',
+              gap: '10px',
+              '& > span': {
+                margin: '0px',
+              },
+            }}
           >
             Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<FlagIcon size={4} />}
+          </ZuButton>
+          <ZuButton
             disabled={!selectedReason}
             onClick={handleReportUser}
+            sx={{
+              color: 'white',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '4px 20px',
+              fontSize: '14px',
+              fontWeight: '700',
+              gap: '10px',
+              '& > span': {
+                margin: '0px',
+              },
+            }}
           >
-            Report user
-          </Button>
+            <FlagIcon size={4} />
+            Report post
+          </ZuButton>
         </Box>
       </Box>
     </Modal>

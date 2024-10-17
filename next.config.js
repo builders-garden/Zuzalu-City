@@ -16,6 +16,12 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: '*.ipfs.w3s.link',
+        pathname: '**',
+        port: '',
+      },
+      {
+        protocol: 'https',
         hostname: 'framerusercontent.com',
         pathname: '/images/**',
         port: '',

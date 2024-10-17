@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { Stack, Box, Typography, useTheme, useMediaQuery } from '@mui/material';
@@ -9,7 +9,7 @@ import { PlusCircleIcon, SparklesIcon, ClockIcon } from '@/components/icons';
 import TopicChip from './TopicChip';
 import SortChip from './SortChip';
 import PostCard from './PostCard';
-import DiscussionDetails from './DiscussionDetails'; // You'll need to create this component
+import DiscussionDetails from './DiscussionDetails';
 import NewPost from './NewPost';
 import {
   ZulandReadableBeam,
@@ -26,7 +26,6 @@ import Link from 'next/link';
 const Discussions: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const params = useParams();
   const eventId = params.eventid.toString();
 
@@ -169,10 +168,6 @@ const Discussions: React.FC = () => {
     setIsDragging(false);
   };
 
-  const handleTopicsMouseUp = () => {
-    setIsDragging(false);
-  };
-
   const handleTopicsMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     e.preventDefault();
@@ -210,7 +205,7 @@ const Discussions: React.FC = () => {
             },
           }}
         >
-          <DiscussionDetails discussion={selectedPost} />
+          <DiscussionDetails discussion={selectedPost} postId={postId} />
         </Stack>
       ) : isNewPostOpen !== '' && currentUser ? (
         <Stack
@@ -320,6 +315,7 @@ const Discussions: React.FC = () => {
                   variant="outlined"
                   size="small"
                   startIcon={<PlusCircleIcon size={5} />}
+                  sx={{ padding: '10px 20px' }}
                   onClick={() => {
                     if (currentUser === undefined) {
                       setShowCheckUserConnectionModal(true);
@@ -381,7 +377,7 @@ const Discussions: React.FC = () => {
                 }}
                 onMouseDown={handleTopicsMouseDown}
                 onMouseLeave={handleTopicsMouseLeave}
-                onMouseUp={handleTopicsMouseUp}
+                onMouseUp={handleTopicsMouseLeave}
                 onMouseMove={handleTopicsMouseMove}
               >
                 {topics.map((topic) => (
