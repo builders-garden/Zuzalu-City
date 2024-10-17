@@ -94,7 +94,6 @@ const processContentBlock = (
         }
         break;
       case 'image-block': {
-        console.log('image-block contentItem.value', contentItem.value);
         const imgBlock = contentItem.value as unknown as {
           caption?: string;
           align?: string;
