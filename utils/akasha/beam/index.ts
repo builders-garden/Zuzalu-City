@@ -31,7 +31,7 @@ export async function getBeams(options?: {
     before: options?.before,
     after: options?.after,
     sorting: options?.sorting ?? { createdAt: SortOrder.Desc },
-    // filters: options?.filters,
+    filters: options?.filters,
   });
   if (beams.akashaBeamIndex === undefined) {
     return null;

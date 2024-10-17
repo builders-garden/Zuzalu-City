@@ -55,7 +55,6 @@ export async function getReflectionsFromBeamId(
     filters?: AkashaReflectInterfaceFiltersInput;
   },
 ): Promise<AkashaReflectionsFromBeam | null> {
-  console.log('before GetReflectionsFromBeam');
   const reflections =
     await akashaSdk.services.gql.client.GetReflectionsFromBeam(
       {
@@ -72,7 +71,6 @@ export async function getReflectionsFromBeamId(
         context: { source: akashaSdk.services.gql.contextSources.composeDB },
       },
     );
-  console.log('[RAW] getReflectionsFromBeamId', reflections);
   if (!reflections.node || JSON.stringify(reflections.node) === '{}') {
     return null;
   }
