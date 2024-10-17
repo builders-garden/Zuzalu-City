@@ -37,6 +37,7 @@ import {
 } from '@/utils/akasha';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 import crypto from 'crypto';
+import { last } from 'lodash';
 
 const akashaSdk = getSDK();
 
@@ -411,21 +412,21 @@ export async function extractReadableReflection(
   };
 }
 
-export async function getReadableReflectionsByReflectionId(
-  id: string,
-  after?: string,
-  before?: string,
-  first?: number,
-  last?: number,
-  sorting?: AkashaReflectSortingInput,
-): Promise<ZulandComplexReflectOfReflections> {
+export async function getReadableReflectionsByReflectionId(params: {
+  id: string;
+  after?: string;
+  before?: string;
+  first?: number;
+  last?: number;
+  sorting?: AkashaReflectSortingInput;
+}): Promise<ZulandComplexReflectOfReflections> {
   const res = await akashaSdk.services.gql.client.GetReflectReflections({
-    id,
-    first: first ?? DEFAULT_BEAMS_TAKE,
-    last,
-    after,
-    before,
-    sorting: sorting ?? { createdAt: SortOrder.Desc },
+    id: params.id,
+    first: params.first ?? DEFAULT_BEAMS_TAKE,
+    last: params.last,
+    after: params.after,
+    before: params.before,
+    sorting: params.sorting ?? { createdAt: SortOrder.Desc },
   });
 
   if (!res.akashaReflectIndex?.edges) {
@@ -444,9 +445,14 @@ export async function getReadableReflectionsByReflectionId(
     cursor: string;
   }[] = [];
   for (const reflection of readableReflections) {
-    const childrenReflections = await getReadableReflectionsByReflectionId(
-      reflection.node.id,
-    );
+    const childrenReflections = await getReadableReflectionsByReflectionId({
+      id: reflection.node.id,
+      first: params.first ?? DEFAULT_BEAMS_TAKE,
+      last: params.last,
+      after: params.after,
+      before: params.before,
+      sorting: params.sorting ?? { createdAt: SortOrder.Desc },
+    });
     if (childrenReflections.edge.length > 0) {
       readableReflectionsWithChildren.push({
         node: {
