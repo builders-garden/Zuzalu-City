@@ -443,7 +443,6 @@ export async function getReadableReflectionsByReflectionId(
     node: ZulandReadableReflectionWithChildren;
     cursor: string;
   }[] = [];
-  // foreach reflection now get the reflections of the reflection
   for (const reflection of readableReflections) {
     const childrenReflections = await getReadableReflectionsByReflectionId(
       reflection.node.id,
@@ -471,16 +470,6 @@ export async function getReadableReflectionsByReflectionId(
     pageInfo: res.akashaReflectIndex?.pageInfo,
     edge: readableReflectionsWithChildren,
   };
-}
-
-export async function getReflectionsTest(id: string) {
-  const res = await akashaSdk.services.gql.client.GetReflectReflections({
-    id,
-    first: DEFAULT_BEAMS_TAKE,
-  });
-  // console.log('reflections by reflection id', res);
-
-  return res.akashaReflectIndex;
 }
 
 export function convertBlockContentToReadableBlock(
