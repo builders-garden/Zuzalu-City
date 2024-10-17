@@ -1,11 +1,14 @@
-export default function ClockIcon() {
+import React from 'react';
+import { IconProps } from 'types';
+
+export const ClockIcon: React.FC<IconProps> = ({ size = 6 }) => {
   return (
     <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      width={`${size * 4}px`}
+      height={`${size * 4}px`}
     >
       <path
         fillRule="evenodd"
@@ -15,4 +18,4 @@ export default function ClockIcon() {
       />
     </svg>
   );
-}
+};

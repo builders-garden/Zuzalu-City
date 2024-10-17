@@ -22,6 +22,19 @@ const CardContentCustom = styled(CardContent)(({ theme }) => ({
   },
 }));
 
+const getDaysAgo = (dateString: string): string => {
+  const postDate = new Date(dateString);
+  const currentDate = new Date();
+  const diffTime = Math.abs(currentDate.getTime() - postDate.getTime());
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays > 30) return `${Math.floor(diffDays / 30)} months ago`;
+  if (diffDays > 7) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${diffDays} days ago`;
+};
+
 const PostCard = ({
   eventId,
   id,
@@ -30,41 +43,27 @@ const PostCard = ({
   author,
   createdAt,
   tags = [],
-  likes = 0,
   replies = 0,
 }: Post) => {
-  const getDaysAgo = (dateString: string): string => {
-    const postDate = new Date(dateString);
-    const currentDate = new Date();
-    const diffTime = Math.abs(currentDate.getTime() - postDate.getTime());
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays > 30) return `${Math.floor(diffDays / 30)} months ago`;
-    if (diffDays > 7) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return `${diffDays} days ago`;
-  };
-
   const daysAgo = getDaysAgo(createdAt);
 
   return (
-    <Card
-      sx={{
-        backgroundColor: 'grey.800',
-        color: 'white',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'grey.600',
+    <Link
+      href={`/events/${eventId}?tab=discussions&postId=${id}`}
+      style={{
+        textDecoration: 'none',
+        color: 'inherit',
       }}
     >
-      <Link
-        href={`/events/${eventId}?tab=discussions&postId=${id}`}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          textDecoration: 'none',
-          color: 'inherit',
+      <Box
+        display="flex"
+        flexDirection="column"
+        sx={{
+          width: '100%',
+          padding: '10px',
+          color: 'white',
+          borderRadius: 2,
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
         <CardContentCustom sx={{ padding: '10px' }}>
@@ -117,19 +116,19 @@ const PostCard = ({
                     <TopicChip key={index} label={tag} selected={false} />
                   ))}
                 </Box>
-                <Stack direction="row" spacing="10px" alignItems="center">
-                  <PostButton
-                    icon={<HeartIcon size={4} />}
-                    label={`${likes}`}
-                    onClick={() => {}}
-                  />
+                <Stack
+                  direction="row"
+                  spacing="10px"
+                  alignItems="center"
+                  justifyContent="flex-end"
+                >
                   <PostButton
                     icon={<ChatBubbleIcon size={4} />}
                     label={`${replies}`}
                     onClick={() => {}}
                   />
                   <PostButton
-                    icon={<ArrowUpOnSquareIcon size={3} />}
+                    icon={<ArrowUpOnSquareIcon size={4} />}
                     onClick={() => {}}
                   />
                 </Stack>
@@ -137,8 +136,8 @@ const PostCard = ({
             </Stack>
           </Box>
         </CardContentCustom>
-      </Link>
-    </Card>
+      </Box>
+    </Link>
   );
 };
 
@@ -171,15 +170,13 @@ const PostButton = ({
   }
   return (
     <Button
-      variant="contained"
+      color="inherit"
       startIcon={icon}
       onClick={onClick}
-      size="small"
       sx={{
         backgroundColor: 'primary.main',
-        padding: '10px',
-        width: '32px',
         height: '32px',
+        borderRadius: '10px',
       }}
     >
       <Typography variant="caption">{label}</Typography>

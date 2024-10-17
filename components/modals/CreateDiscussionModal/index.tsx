@@ -66,7 +66,6 @@ export default function CreateDiscussionModal({
         checkRegistered: false,
         resumeSignIn: false,
       });
-      console.log('auth res can', authRes);
       setUserAuth(authRes.data);
     }
 

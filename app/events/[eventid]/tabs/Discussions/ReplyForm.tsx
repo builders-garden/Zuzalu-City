@@ -35,7 +35,6 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
           checkRegistered: false,
           resumeSignIn: false,
         });
-        console.log('auth res can', authRes);
         setUserAuth(authRes.data);
       } catch (error) {
         console.error('Error logging in to Akasha', error);

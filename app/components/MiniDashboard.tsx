@@ -3,11 +3,10 @@ import MiniDashboardSigninButton from '@/components/home/MiniDashboardSigninButt
 import SigninDialog from '@/components/home/SigninDialog';
 import {
   ArrowTopRightSquareIcon,
-  ChatsIcon,
   SettingIcon,
   TicketIcon,
 } from '@/components/icons';
-import ClockIcon from '@/components/icons/Clock';
+import { ClockIcon } from '@/components/icons';
 import NewUserPromptModal from '@/components/modals/newUserPrompt';
 import { dashboardEvent } from '@/constant';
 import { useCeramicContext } from '@/context/CeramicContext';

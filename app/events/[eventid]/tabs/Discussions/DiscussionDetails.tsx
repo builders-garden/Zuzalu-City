@@ -14,7 +14,6 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  HeartIcon,
   ChatBubbleIcon,
   FlagIcon,
   FireIcon,
@@ -328,15 +327,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
             <Stack direction="row" justifyContent="space-between">
               <Stack direction="row" spacing={1}>
                 <Button
-                  startIcon={<HeartIcon size={4} />}
-                  variant="contained"
-                  size="small"
-                >
-                  {discussion?.likes}
-                </Button>
-                <Button
                   startIcon={<FlagIcon size={4} />}
-                  variant="contained"
                   size="small"
                   onClick={handleOpenReportModal}
                 >

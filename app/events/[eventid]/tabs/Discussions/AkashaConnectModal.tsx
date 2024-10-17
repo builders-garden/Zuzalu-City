@@ -15,7 +15,7 @@ import {
 interface AkashaConnectModalProps {
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
-  setShowAuthenticatedPart: Dispatch<SetStateAction<boolean>>;
+  setShowAuthenticatedPart: () => void;
   setParentUserAuth: Dispatch<
     SetStateAction<
       | ({
@@ -52,7 +52,6 @@ export default function AkashaConnectModal({
       checkRegistered: true,
       resumeSignIn: false,
     });
-    console.log('auth res can', authRes);
     setLocalUserAuth(authRes.data ? authRes.data : undefined);
     setParentUserAuth(authRes.data ? authRes.data : undefined);
   }
@@ -73,7 +72,6 @@ export default function AkashaConnectModal({
   //       checkRegistered: false,
   //       resumeSignIn: false,
   //     });
-  //     console.log('auth res can', authRes);
   //     setUserAuth(authRes.data);
   //   }
 
@@ -160,7 +158,7 @@ export default function AkashaConnectModal({
             loginAkasha()
               .then(() => {
                 setShowModal(false);
-                setShowAuthenticatedPart(true);
+                setShowAuthenticatedPart();
               })
               .catch((err) => {
                 console.log('err', err);
