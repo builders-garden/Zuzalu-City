@@ -1,4 +1,5 @@
 import {
+  AkashaReflectConnection,
   AkashaReflectEdge,
   AkashaReflectInput,
   AkashaReflectInterfaceFiltersInput,
@@ -114,15 +115,95 @@ export async function getReadableReflectionsByBeamId(
     filters?: AkashaReflectInterfaceFiltersInput;
   },
 ): Promise<ZulandReadableReflectionResult | null> {
-  console.log('[RAW] beam id', beamId);
   const reflections = await getReflectionsFromBeamId(beamId, options);
 
-  console.log('[RAW] reflections from beam id', reflections);
   if (!reflections) {
     return null;
   }
 
   const unreadableReflections = reflections;
+
+  if (!unreadableReflections.reflections.edges) {
+    return null;
+  }
+
+  const readableReflections: (
+    | {
+        node: ZulandReadableReflection;
+        cursor: string;
+      }
+    | undefined
+  )[] = await extractReadableReflections(
+    unreadableReflections.reflections.edges as AkashaReflectEdge[],
+  );
+
+  return {
+    ...unreadableReflections,
+    reflections: {
+      ...unreadableReflections.reflections,
+      edges: readableReflections.filter(
+        (reflection) => reflection !== undefined,
+      ),
+    },
+  };
+}
+
+export async function getTopReadableReflectionsByBeamId(
+  beamId: string,
+  options?: {
+    first?: number;
+    after?: string;
+    before?: string;
+    last?: number;
+    sorting?: AkashaReflectInterfaceSortingInput;
+    // filters?: AkashaReflectInterfaceFiltersInput;
+  },
+): Promise<ZulandReadableReflectionResult | null> {
+  const reflections =
+    await akashaSdk.services.gql.client.GetReflectionsFromBeam(
+      {
+        id: beamId,
+        first: options?.first ?? DEFAULT_REFLECTIONS_TAKE,
+        after: options?.after,
+        before: options?.before,
+        last: options?.last,
+        sorting: options?.sorting ?? { createdAt: SortOrder.Desc },
+        filters: {
+          or: [
+            {
+              where: {
+                isReply: {
+                  equalTo: false,
+                },
+              },
+            },
+            {
+              where: {
+                isReply: {
+                  isNull: true,
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        context: { source: akashaSdk.services.gql.contextSources.composeDB },
+      },
+    );
+
+  if (!reflections.node) {
+    return null;
+  }
+
+  if (Object.keys(reflections.node).length === 0) {
+    return null; // or return an empty array, depending on your preference
+  }
+
+  const unreadableReflections = reflections.node as {
+    reflectionsCount: number;
+    reflections: AkashaReflectConnection;
+  };
 
   if (!unreadableReflections.reflections.edges) {
     return null;
