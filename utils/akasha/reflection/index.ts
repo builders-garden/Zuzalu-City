@@ -151,7 +151,7 @@ export async function getReadableReflectionsByBeamId(
 
 export async function getReadableReflectionsByReflectionId(
   id: string,
-  options: {
+  options?: {
     after?: string;
     before?: string;
     first?: number;
@@ -187,11 +187,11 @@ export async function getReadableReflectionsByReflectionId(
     const childrenReflections = await getReadableReflectionsByReflectionId(
       reflection.node.id,
       {
-        first: options.first ?? DEFAULT_REFLECTIONS_TAKE,
-        last: options.last,
-        after: options.after,
-        before: options.before,
-        sorting: options.sorting ?? { createdAt: SortOrder.Desc },
+        first: options?.first ?? DEFAULT_REFLECTIONS_TAKE,
+        last: options?.last,
+        after: options?.after,
+        before: options?.before,
+        sorting: options?.sorting ?? { createdAt: SortOrder.Desc },
       },
     );
     if (childrenReflections.edge.length > 0) {
