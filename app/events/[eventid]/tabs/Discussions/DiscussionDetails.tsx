@@ -1,29 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Stack,
   Typography,
   Avatar,
   Box,
-  Button,
   Divider,
   IconButton,
-  Modal,
-  Chip,
-  TextField,
   SwipeableDrawer,
   useTheme,
 } from '@mui/material';
 import {
   ChatBubbleIcon,
   FlagIcon,
-  FireIcon,
-  ArrowUpCircleIcon,
   SparklesIcon,
-  ArrowDownIcon,
-  TwitterIcon,
-  FarcasterIcon,
-  WhatsappIcon,
-  CopyIcon,
+  ClockIcon,
 } from '@/components/icons';
 import { ArrowUpOnSquareIcon } from '@/components/icons/ArrowUpOnSquare';
 import TopicChip from './TopicChip';
@@ -40,10 +32,14 @@ import {
   createReflection,
   encodeSlateToBase64,
   getReadableReflectionsByBeamId,
+  getTopReadableReflectionsByBeamId,
   standardDateFormat,
   ZulandReadableReflection,
 } from '@/utils/akasha';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import ReportPostModal from '@/components/modals/Zuland/ReportPostModal';
+import ShareModal from '@/components/modals/Zuland/ShareModal';
+import { ZuButton } from '@/components/core';
 
 interface DiscussionDetailsProps {
   discussion: Post | undefined;
@@ -69,26 +65,27 @@ export type ReplyType = {
 const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   discussion,
 }) => {
-  const { breakpoints } = useTheme();
+  const params = useParams();
+  const eventId = params.eventid.toString();
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [state, setState] = useState({
     top: false,
     left: false,
     bottom: false,
     right: false,
   });
-  const ref = useRef<HTMLDivElement | null>(null);
 
   const queryClient = useQueryClient();
 
-  const [selectedSort, setSelectedSort] = useState<string>('Hot');
+  const [selectedSort, setSelectedSort] = useState<string>('NEW');
   const [openReportModal, setOpenReportModal] = useState(false);
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [openShareModal, setOpenShareModal] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [showReplyForm, setShowReplyForm] = useState(false);
   const replyFormRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
 
   const postId = useSearchParams().get('postId');
   const [reflectionCount, setReflectionCount] = useState<number>(0);
@@ -100,7 +97,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     queryKey: ['reflections', postId],
     queryFn: async () => {
       if (!postId) return null;
-      return await getReadableReflectionsByBeamId(postId);
+      return await getTopReadableReflectionsByBeamId(postId);
     },
     enabled: !!postId,
   });
@@ -120,28 +117,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     setState({ ...state, [anchor]: open });
   };
 
-  const handleSortClick = (sort: string) => {
-    setSelectedSort(sort);
-  };
-
-  const handleOpenReportModal = () => {
-    setOpenReportModal(true);
-    setSelectedReason(null); // Reset selected reason when opening modal
-  };
-  const handleCloseReportModal = () => setOpenReportModal(false);
-
-  const handleReasonSelect = (reason: string) => {
-    setSelectedReason(reason);
-  };
-
-  const handleReportUser = () => {
-    if (selectedReason) {
-      // Implement the report logic here
-      console.log(`Reporting user for: ${selectedReason}`);
-      handleCloseReportModal();
-    }
-  };
-
   const handleShare = () => {
     if (isMobile && navigator.share) {
       navigator
@@ -156,52 +131,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     }
   };
 
-  const handleCloseShareModal = () => setOpenShareModal(false);
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    // Optionally, show a success message
-  };
-
-  const getEncodedText = () => {
-    const textEncoded = encodeURIComponent(
-      `Zuzalu, follow this discussion ${discussion?.title} on ${window.location.href}`,
-    );
-    return textEncoded;
-  };
-
-  const shareToTwitter = () => {
-    const textEncoded = getEncodedText();
-    window.open(
-      `https://twitter.com/intent/tweet?text=${textEncoded}`,
-      '_blank',
-    );
-  };
-
-  const shareToFarcaster = () => {
-    const textEncoded = getEncodedText();
-    window.open(`https://warpcast.com/~/compose?text=${textEncoded}`, '_blank');
-  };
-
-  const shareToWhatsApp = () => {
-    const textEncoded = getEncodedText();
-    window.open(`https://wa.me/?text=${textEncoded}`, '_blank');
-  };
-
-  const reportReasons = [
-    'Harassment',
-    'Fraud or scam',
-    'Spam',
-    'Misinformation',
-    'Hateful speech',
-    'Threat or violence',
-    'Self harm',
-    'Graphic content',
-    'Sexual content',
-    'Fake account',
-    'Bot account',
-  ];
-
   const handleReplyClick = () => {
     setShowReplyForm(true);
     setTimeout(() => {
@@ -211,9 +140,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
       });
     }, 0);
   };
-
-  const params = useParams();
-  const eventId = params.eventid.toString();
 
   const handleReplySubmit = async (
     content: string,
@@ -248,53 +174,24 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
         ],
       });
 
-      // Refetch reflections after creating a new one
+      // Invalidate queries
       if (postId) {
         queryClient.invalidateQueries({ queryKey: ['reflections', postId] });
         queryClient.invalidateQueries({ queryKey: ['beams', eventId] });
-        const reflectionsResult = await getReadableReflectionsByBeamId(postId);
-        if (reflectionsResult) {
-          setReflections(
-            reflectionsResult.reflections.edges
-              .map((edge) => (edge ? edge.node : null))
-              .filter((node) => node !== null) as ZulandReadableReflection[],
-          );
-          setReflectionCount(reflectionsResult.reflectionsCount);
+        if (parentReflectionId) {
+          queryClient.invalidateQueries({
+            queryKey: ['childReflections', parentReflectionId],
+          });
         }
       }
     } catch (error) {
       console.error('Error creating reflection:', error);
-      // Optionally, show an error message to the user
     }
   };
 
-  const getParentReflection = async (
-    reflection: ZulandReadableReflection,
-  ): Promise<ZulandReadableReflection | undefined> => {
-    if (!reflection.isReply) {
-      return undefined;
-    }
-
-    const parentReflection = reflections.find((r) => r.id === reflection.id);
-    if (!parentReflection) {
-      console.error(
-        'Parent reflection not found on cached reflections, fetching...',
-      );
-      // TODO: fetch parent reflection from getReadableReflectionsByReflectionId
-      const fetchReflectionById = await getReadableReflectionsByBeamId(
-        reflection.id,
-      );
-      if (!fetchReflectionById) {
-        console.error('Parent reflection not found');
-        return undefined;
-      }
-      const parentReflection = fetchReflectionById.reflections.edges
-        .map((edge) => (edge ? edge.node : null))
-        .filter((node) => node !== null) as ZulandReadableReflection[];
-      console.log('Parent reflection:', parentReflection);
-    }
-    return parentReflection;
-  };
+  const openDrawer = useCallback(() => {
+    setState({ ...state, right: true });
+  }, [state]);
 
   return (
     <div>
@@ -302,7 +199,13 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
         {postId && discussion ? (
           <>
             <Typography variant="h4">{discussion?.title}</Typography>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              onClick={openDrawer}
+              sx={{ cursor: 'pointer' }}
+            >
               <Avatar
                 src={discussion?.author.akashaProfile.avatar?.default.src}
                 alt={discussion?.author.akashaProfile.name}
@@ -310,7 +213,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
               />
               <Stack direction="column" justifyContent="space-around">
                 <Typography variant="body2">
-                  {/* {discussion?.author.id.slice(0, 10)} */}
                   {discussion?.author.akashaProfile.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -318,174 +220,100 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
                 </Typography>
               </Stack>
             </Stack>
+
+            {/* Markdown Visualizer */}
             <MarkdownVisualizer content={discussion?.body || ''} />
+
+            {/* Tags */}
             <Box sx={{ display: 'flex', gap: 1 }}>
               {discussion?.tags?.map((tag, index) => (
                 <TopicChip key={index} label={tag} selected={false} />
               ))}
             </Box>
+
+            {/* Actions */}
             <Stack direction="row" justifyContent="space-between">
               <Stack direction="row" spacing={1}>
-                <Button
-                  startIcon={<FlagIcon size={4} />}
-                  size="small"
-                  onClick={handleOpenReportModal}
+                <ZuButton
+                  onClick={() => setOpenReportModal(true)}
+                  sx={{
+                    color: 'white',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    padding: '4px 20px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    gap: '10px',
+                    '& > span': {
+                      margin: '0px',
+                    },
+                  }}
                 >
+                  <FlagIcon size={4} />
                   Report
-                </Button>
-                <Button
-                  startIcon={<ArrowUpOnSquareIcon size={4} />}
-                  variant="contained"
-                  size="small"
+                </ZuButton>
+                <ZuButton
                   onClick={handleShare}
+                  sx={{
+                    color: 'white',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    padding: '4px 20px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    gap: '10px',
+                    '& > span': {
+                      margin: '0px',
+                    },
+                  }}
                 >
+                  <ArrowUpOnSquareIcon size={4} />
                   Share
-                </Button>
+                </ZuButton>
               </Stack>
-              <Button
-                variant="contained"
-                size="small"
+              <ZuButton
                 onClick={handleReplyClick}
+                sx={{
+                  color: '#D7FFC4',
+                  backgroundColor: 'rgba(215, 255, 196, 0.2)',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(215, 255, 196, 0.2)',
+                  padding: '4px 20px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  gap: '10px',
+                  '& > span': {
+                    margin: '0px',
+                  },
+                }}
               >
                 Reply
-              </Button>
+              </ZuButton>
             </Stack>
 
+            {/* Reply Form */}
             {showReplyForm && (
               <div>
                 <ReplyForm
                   onCancel={() => setShowReplyForm(false)}
-                  onSubmit={handleReplySubmit}
+                  onReplySubmit={handleReplySubmit}
                 />
                 <div ref={replyFormRef} />
               </div>
             )}
 
             {/* Report Modal */}
-            <Modal
-              open={openReportModal}
-              onClose={handleCloseReportModal}
-              aria-labelledby="report-modal-title"
-            >
-              <Box
-                sx={{
-                  position: 'absolute' as 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: 400,
-                  bgcolor: 'background.default',
-                  border: '2px solid #222222',
-                  borderRadius: '10px',
-                  boxShadow: 24,
-                  p: 4,
-                }}
-              >
-                <Typography
-                  id="report-modal-title"
-                  variant="h6"
-                  component="h2"
-                  gutterBottom
-                >
-                  Report this discussion
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  Select a reason that applies
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  {reportReasons.map((reason) => (
-                    <Chip
-                      key={reason}
-                      label={reason}
-                      onClick={() => handleReasonSelect(reason)}
-                      color={
-                        selectedReason === reason ? 'primary' : 'secondary'
-                      }
-                      sx={{ m: 0.5 }}
-                    />
-                  ))}
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    mt: 2,
-                  }}
-                >
-                  <Button
-                    onClick={handleCloseReportModal}
-                    variant="outlined"
-                    color="secondary"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    startIcon={<FlagIcon size={4} />}
-                    disabled={!selectedReason}
-                    onClick={handleReportUser}
-                  >
-                    Report user
-                  </Button>
-                </Box>
-              </Box>
-            </Modal>
+            <ReportPostModal
+              openReportModal={openReportModal}
+              setOpenReportModal={setOpenReportModal}
+            />
 
             {/* Share Modal */}
-            <Modal
-              open={openShareModal}
-              onClose={handleCloseShareModal}
-              aria-labelledby="share-modal-title"
-            >
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: 400,
-                  bgcolor: 'background.default',
-                  border: '2px solid #222222',
-                  borderRadius: '10px',
-                  boxShadow: 24,
-                  p: 4,
-                }}
-              >
-                <Typography
-                  id="share-modal-title"
-                  variant="h6"
-                  component="h2"
-                  gutterBottom
-                >
-                  Share this discussion
-                </Typography>
-                <TextField
-                  fullWidth
-                  value={window.location.href}
-                  InputProps={{
-                    readOnly: true,
-                    endAdornment: (
-                      <IconButton onClick={copyToClipboard}>
-                        <CopyIcon />
-                      </IconButton>
-                    ),
-                  }}
-                  sx={{ mb: 2 }}
-                />
-                <Stack direction="row" spacing={2} justifyContent="center">
-                  <IconButton onClick={shareToTwitter}>
-                    <TwitterIcon />
-                  </IconButton>
-                  <IconButton onClick={shareToFarcaster}>
-                    <FarcasterIcon />
-                  </IconButton>
-                  <IconButton onClick={shareToWhatsApp}>
-                    <WhatsappIcon />
-                  </IconButton>
-                </Stack>
-              </Box>
-            </Modal>
+            <ShareModal
+              discussionTitle={discussion?.title}
+              openShareModal={openShareModal}
+              setOpenShareModal={setOpenShareModal}
+            />
 
             {/* Reply section */}
             <Stack
@@ -524,53 +352,36 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
                   Sort by
                 </Typography>
                 <SortChip
-                  label="Hot"
-                  selected={selectedSort === 'Hot'}
-                  onClick={() => handleSortClick('Hot')}
-                  icon={<FireIcon size={4} />}
-                />
-                <SortChip
-                  label="Top"
-                  selected={selectedSort === 'Top'}
-                  onClick={() => handleSortClick('Top')}
-                  icon={<ArrowUpCircleIcon size={4} />}
+                  label="Oldest"
+                  selected={selectedSort === 'OLDEST'}
+                  onClick={() => setSelectedSort('OLDEST')}
+                  icon={<ClockIcon size={4} />}
                 />
                 <SortChip
                   label="New"
-                  selected={selectedSort === 'New'}
-                  onClick={() => handleSortClick('New')}
+                  selected={selectedSort === 'NEW'}
+                  onClick={() => setSelectedSort('NEW')}
                   icon={<SparklesIcon size={4} />}
                 />
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<ArrowDownIcon size={4} />}
-                >
-                  Jump to start
-                </Button>
               </Stack>
             </Stack>
             <Divider />
 
             {/* Existing replies */}
             <Stack spacing={3}>
-              {reflections.map(async (reflection) => {
-                const parentReflection = await getParentReflection(reflection);
-                return (
-                  <CommentDetails
-                    key={reflection.id}
-                    reflection={reflection}
-                    parentReflection={parentReflection}
-                    onReply={handleReplySubmit}
-                  />
-                );
-              })}
+              {reflections.map(async (reflection) => (
+                <CommentDetails
+                  key={reflection.id}
+                  reflection={reflection}
+                  onReplySubmit={handleReplySubmit}
+                />
+              ))}
             </Stack>
           </>
         ) : null}
       </Stack>
 
-      {/* Sidebar */}
+      {/* Profile Sidebar */}
       <SwipeableDrawer
         hideBackdrop={true}
         sx={{
@@ -579,17 +390,17 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
             width: '30% !important',
             boxShadow: 'none',
           },
-          [breakpoints.down('lg')]: {
+          [theme.breakpoints.down('lg')]: {
             '& .MuiDrawer-paper': {
               width: '50% !important',
             },
           },
-          [breakpoints.down('md')]: {
+          [theme.breakpoints.down('md')]: {
             '& .MuiDrawer-paper': {
               width: '70% !important',
             },
           },
-          [breakpoints.down('sm')]: {
+          [theme.breakpoints.down('sm')]: {
             '& .MuiDrawer-paper': {
               width: '90% !important',
             },
@@ -599,7 +410,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
         open={state['right']}
         onClose={() => toggleDrawer('right', false)}
         onOpen={() => toggleDrawer('right', true)}
-        ref={ref}
+        ref={drawerRef}
       >
         <DiscussionSidebar discussion={discussion} />
       </SwipeableDrawer>

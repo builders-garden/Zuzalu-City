@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Stack, Typography, useTheme } from '@mui/material';
+import {
+  Stack,
+  Typography,
+  useTheme,
+  Snackbar,
+  Alert,
+  SnackbarCloseReason,
+} from '@mui/material';
 import OverviewButton from './OverviewButton';
 import { Event } from '@/types';
 import { Anchor, ProfileEdge, Profile } from '@/types';
@@ -245,8 +252,40 @@ const OverviewHeader = ({ event }: PropTypes) => {
     getPeople();
   }, []);
 
+  const [toast, setToast] = React.useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'info' | 'warning',
+  });
+
+  const showToast = (
+    message: string,
+    severity: 'success' | 'error' | 'info' | 'warning' = 'success',
+  ) => {
+    setToast({ open: true, message, severity });
+  };
+
+  const handleCloseToast = () => {
+    setToast({ ...toast, open: false });
+  };
+
   return event ? (
     <Stack direction="column" spacing={3} marginBottom={3}>
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleCloseToast}
+        message={toast.message}
+      >
+        <Alert
+          onClose={handleCloseToast}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -362,6 +401,7 @@ const OverviewHeader = ({ event }: PropTypes) => {
           eventId={eventId}
           showModal={showDiscussion}
           setShowModal={setShowDiscussion}
+          showToast={showToast}
           eventName={event.title}
           eventDescription={
             event.tagline || `Brief description of ${event.title}`

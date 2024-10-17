@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Dispatch, SetStateAction, useEffect } from 'react';
-import { ZuButton, ZuInput } from '@/components/core';
+import { useState, Dispatch, SetStateAction } from 'react';
+import { ZuButton } from '@/components/core';
 import akashaSdk from '@/utils/akasha/akasha';
 import {
   Dialog,

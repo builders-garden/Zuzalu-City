@@ -2,16 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Typography, TextField, Button, Stack, Box } from '@mui/material';
 import TopicChip from './TopicChip';
 import akashaSdk from '@/utils/akasha/akasha';
+import { ZuButton } from '@/components/core';
 
 interface ReplyFormProps {
   onCancel: () => void;
-  onSubmit: (content: string, topics: string[]) => void;
+  onReplySubmit: (
+    content: string,
+    topics: string[],
+    parentReflectionId?: string,
+  ) => void;
   replyingTo?: string;
 }
 
 const ReplyForm: React.FC<ReplyFormProps> = ({
   onCancel,
-  onSubmit,
+  onReplySubmit,
   replyingTo,
 }) => {
   // Akasha User Authentication (required for creating a beam)
@@ -60,14 +65,14 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   };
 
   const handleSubmit = () => {
-    onSubmit(content, selectedTopics);
+    onReplySubmit(content, selectedTopics);
     setContent('');
     setSelectedTopics([]);
   };
 
   return (
-    <Stack spacing={3}>
-      <Typography variant="h4">
+    <Stack spacing={2}>
+      <Typography variant="body2">
         {replyingTo ? `Reply to ${replyingTo}` : 'Create a reply'}
       </Typography>
       <Stack spacing={1}>
@@ -97,17 +102,42 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
         />
       </Stack>
       <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <Button variant="outlined" onClick={onCancel}>
+        <ZuButton
+          onClick={onCancel}
+          sx={{
+            color: 'white',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '4px 20px',
+            fontSize: '14px',
+            fontWeight: '700',
+            gap: '10px',
+            '& > span': {
+              margin: '0px',
+            },
+          }}
+        >
           Cancel
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
+        </ZuButton>
+        <ZuButton
           onClick={handleSubmit}
           disabled={!content}
+          sx={{
+            color: '#D7FFC4',
+            backgroundColor: 'rgba(215, 255, 196, 0.2)',
+            borderRadius: '10px',
+            border: '1px solid rgba(215, 255, 196, 0.2)',
+            padding: '4px 20px',
+            fontSize: '14px',
+            fontWeight: '700',
+            gap: '10px',
+            '& > span': {
+              margin: '0px',
+            },
+          }}
         >
           Post
-        </Button>
+        </ZuButton>
       </Stack>
     </Stack>
   );

@@ -2,11 +2,8 @@
 
 import { useState, Dispatch, SetStateAction, useEffect } from 'react';
 import { ZuButton, ZuInput } from '@/components/core';
-import akashaSdk, {
-  createApp,
-  createAppRelease,
-  getAppByEventId,
-} from '@/utils/akasha/akasha';
+import { createApp, createAppRelease, getAppByEventId } from '@/utils/akasha';
+import akashaSdk from '@/utils/akasha/akasha';
 import {
   Dialog,
   DialogActions,
@@ -19,6 +16,10 @@ import {
 interface CreateDiscussionModalProps {
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
+  showToast: (
+    text: string,
+    severity: 'success' | 'error' | 'info' | 'warning',
+  ) => void;
   eventId: string;
   eventName: string;
   eventDescription: string;
@@ -27,6 +28,7 @@ interface CreateDiscussionModalProps {
 export default function CreateDiscussionModal({
   showModal,
   setShowModal,
+  showToast,
   eventId,
   eventName,
   eventDescription,
@@ -37,12 +39,17 @@ export default function CreateDiscussionModal({
   useEffect(() => {
     async function checkAppExists() {
       const appAlreadyExists = await getAppByEventId(eventId);
-      console.log('appAlreadyExists', appAlreadyExists);
       if (appAlreadyExists) {
-        console.log('app already exists');
+        showToast(
+          `Discussion already exists for "${eventName}", closing...`,
+          'info',
+        );
         setAppAlreadyExists(true);
         setDisplayName(appAlreadyExists.name);
         setDescription(appAlreadyExists.description);
+        setTimeout(() => {
+          setShowModal(false);
+        }, 4000);
       }
     }
     checkAppExists();
@@ -75,35 +82,40 @@ export default function CreateDiscussionModal({
   }, [userAuth]);
 
   const handleCreateDiscussion = async () => {
-    const appAlreadyExists = await getAppByEventId(eventId);
-    if (appAlreadyExists) {
-      console.log('app already exists');
-      return;
-    }
-    const createAppResult = await createApp({
-      eventID: eventId,
-      displayName: displayName,
-      description: description,
-    });
-    console.log('createAppResult', createAppResult);
-    if (createAppResult) {
-      const createAppReleaseResult = await createAppRelease({
-        applicationID: createAppResult?.document.id,
-        source: `https://zuzalu.city/events/${eventId}`,
-        version: '1.0.0',
+    try {
+      const appAlreadyExists = await getAppByEventId(eventId);
+      if (appAlreadyExists) {
+        console.log('app already exists');
+        return;
+      }
+      const createAppResult = await createApp({
+        eventID: eventId,
+        displayName: displayName,
+        description: description,
       });
-      console.log('createAppReleaseResult', createAppReleaseResult);
+      if (createAppResult) {
+        const createAppReleaseResult = await createAppRelease({
+          applicationID: createAppResult?.document.id,
+          source: `https://zuzalu.city/events/${eventId}`,
+          version: '1.0.0',
+        });
+        console.log('createAppReleaseResult', createAppReleaseResult);
+        showToast(
+          `Successfully created Akasha discussion for "${eventName}"`,
+          'success',
+        );
+        setShowModal(false);
+      }
+    } catch (error) {
+      console.error('Error creating discussion:', error);
+      showToast(`Error creating discussion for event "${eventName}"`, 'error');
     }
-  };
-
-  const onClose = () => {
-    setShowModal(false);
   };
 
   return (
     <Dialog
       open={showModal}
-      onClose={onClose}
+      onClose={() => setShowModal(false)}
       PaperProps={{
         style: {
           width: '692px',
