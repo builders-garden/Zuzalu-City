@@ -13,10 +13,7 @@ import {
   BeamsByAuthorDid,
   ZulandReadableBeam,
 } from '../akasha.d';
-import {
-  extractBeamReadableContent,
-  extractBeamsReadableContent,
-} from './utils';
+import { extractBeamReadableContent } from './utils';
 import { getAppByEventId } from '../app';
 import { createBlockContent } from '../block';
 

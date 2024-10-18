@@ -1,15 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Typography,
-  TextField,
-  Button,
-  Stack,
-  Box,
-  InputAdornment,
-} from '@mui/material';
-import TopicChip from './TopicChip';
+import React, { useState } from 'react';
+import { Typography, TextField, Stack, InputAdornment } from '@mui/material';
 import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
 import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import { ZuButton } from '@/components/core';
+import TopicList from './TopicList';
 
 interface NewPostProps {
   eventId: string;
@@ -31,27 +25,8 @@ const NewPost: React.FC<NewPostProps> = ({
   const [content, setContent] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
-  const topics = [
-    'Announcements',
-    'Question',
-    'Meetup',
-    'Event',
-    'Community information',
-    'Coding',
-    'Logistics',
-    'Q&A',
-    'Workshop',
-    'Afterparty',
-    'Other',
-  ];
-
   const MAX_TITLE_LENGTH = 300;
-
-  const handleTopicClick = (topic: string) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic],
-    );
-  };
+  const MAX_CONTENT_LENGTH = 10000;
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value.slice(0, MAX_TITLE_LENGTH);
@@ -62,7 +37,7 @@ const NewPost: React.FC<NewPostProps> = ({
     console.log({ title, content, selectedTopics, eventId });
     try {
       await createBeamPassingBlocks();
-      onPostCreated(); // Call this instead of onCancel
+      onPostCreated();
     } catch (error) {
       console.error('Error creating beam', error);
       onCancel();
@@ -74,7 +49,7 @@ const NewPost: React.FC<NewPostProps> = ({
       throw new Error('Beam title and content are required');
     }
     try {
-      const res = await createBeamFromBlocks({
+      await createBeamFromBlocks({
         eventId,
         active: true,
         blocks: [
@@ -117,8 +92,11 @@ const NewPost: React.FC<NewPostProps> = ({
               'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
           },
         ],
+        tags: selectedTopics.map((topic) => ({
+          labelType: '@bg/zuland#tag',
+          value: topic,
+        })),
       });
-      console.log('createBeamFromBlocks res', res);
     } catch (err) {
       console.error('createBeamFromBlocks error', err);
       throw err;
@@ -127,9 +105,9 @@ const NewPost: React.FC<NewPostProps> = ({
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h4">Create a new discussion</Typography>
+      <Typography variant="h4">Create a new post</Typography>
       <Stack spacing={1}>
-        <Typography variant="body1">Write a title</Typography>
+        <Typography variant="body1">Title</Typography>
         <TextField
           fullWidth
           label="Title"
@@ -152,19 +130,12 @@ const NewPost: React.FC<NewPostProps> = ({
           }}
         />
       </Stack>
-      <Stack spacing={1}>
-        <Typography variant="body1">Add topics</Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {topics.map((topic) => (
-            <TopicChip
-              key={topic}
-              label={topic}
-              onClick={() => handleTopicClick(topic)}
-              selected={selectedTopics.includes(topic)}
-            />
-          ))}
-        </Box>
-      </Stack>
+
+      <TopicList
+        selectedTopics={selectedTopics}
+        setSelectedTopics={setSelectedTopics}
+      />
+
       <Stack spacing={1}>
         <Typography variant="body1">Compose your post</Typography>
         <TextField
@@ -175,20 +146,38 @@ const NewPost: React.FC<NewPostProps> = ({
           rows={6}
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          inputProps={{
+            maxLength: MAX_CONTENT_LENGTH,
+          }}
+          helperText={`${MAX_CONTENT_LENGTH - content.length} characters remaining`}
+          FormHelperTextProps={{
+            sx: { textAlign: 'right' },
+          }}
         />
       </Stack>
       <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <Button variant="outlined" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
+        <ZuButton onClick={onCancel}>Cancel</ZuButton>
+        <ZuButton
           variant="contained"
           color="primary"
           onClick={handleSubmit}
           disabled={!title || !content}
+          sx={{
+            color: '#D7FFC4',
+            backgroundColor: 'rgba(215, 255, 196, 0.2)',
+            borderRadius: '10px',
+            border: '1px solid rgba(215, 255, 196, 0.2)',
+            padding: '4px 20px',
+            fontSize: '14px',
+            fontWeight: '700',
+            gap: '10px',
+            '& > span': {
+              margin: '0px',
+            },
+          }}
         >
           Post
-        </Button>
+        </ZuButton>
       </Stack>
     </Stack>
   );

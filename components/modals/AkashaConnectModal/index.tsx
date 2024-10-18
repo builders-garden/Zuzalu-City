@@ -80,8 +80,6 @@ export default function AkashaConnectModal({
   //   }
   // }, [userAuth]);
 
-  const handleCreateProfile = async () => {};
-
   const onClose = () => {
     setShowModal(false);
   };

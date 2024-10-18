@@ -91,6 +91,7 @@ import TwitterIcon from './Twitter';
 import FarcasterIcon from './Farcaster';
 import DiscordIcon from './Discord';
 import TelegramIcon from './Telegram';
+import ChainIcon from './Chain';
 
 export {
   HomeIcon,
@@ -186,4 +187,5 @@ export {
   WhatsappIcon,
   DiscordIcon,
   TelegramIcon,
+  ChainIcon,
 };

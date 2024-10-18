@@ -1,19 +1,25 @@
+'use client';
+
 import { ChatBubbleIcon, HeartIcon } from '@/components/icons';
 import { ArrowUpOnSquareIcon } from '@/components/icons/ArrowUpOnSquare';
 import {
   Stack,
   Typography,
-  Card,
   Box,
   Button,
   IconButton,
+  Avatar,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import TopicChip from './TopicChip';
 import { CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Link from 'next/link';
 import MarkdownVisualizer from './MarkdownVisualizer';
-import { Post } from '@/utils/akasha/beam-to-markdown';
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
+import { useState } from 'react';
+import ShareModal from '@/components/modals/Zuland/ShareModal';
 
 const CardContentCustom = styled(CardContent)(({ theme }) => ({
   padding: '10px',
@@ -45,16 +51,28 @@ const PostCard = ({
   tags = [],
   replies = 0,
 }: Post) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [openShareModal, setOpenShareModal] = useState(false);
+
   const daysAgo = getDaysAgo(createdAt);
 
+  const handleShare = () => {
+    if (isMobile && navigator.share) {
+      navigator
+        .share({
+          title: title,
+          text: 'Check out this discussion!',
+          url: window.location.href,
+        })
+        .catch((error) => console.log('Error sharing:', error));
+    } else {
+      setOpenShareModal(true);
+    }
+  };
+
   return (
-    <Link
-      href={`/events/${eventId}?tab=discussions&postId=${id}`}
-      style={{
-        textDecoration: 'none',
-        color: 'inherit',
-      }}
-    >
+    <>
       <Box
         display="flex"
         flexDirection="column"
@@ -70,6 +88,11 @@ const PostCard = ({
           <Box sx={{ padding: 0, display: 'flex' }} gap={2}>
             <Stack flex={1} justifyContent="space-between" gap={2}>
               <Stack direction="row" spacing="8px" alignItems="center">
+                <Avatar
+                  src={buildIpfsUrl(author.akashaProfile.avatar?.default.src)}
+                  alt={author.akashaProfile.name}
+                  sx={{ width: 28, height: 28 }}
+                />
                 <Typography variant="body2">
                   {author.akashaProfile.name}
                 </Typography>
@@ -80,25 +103,33 @@ const PostCard = ({
                   {daysAgo}
                 </Typography>
               </Stack>
-              <Stack direction="column" gap={0}>
-                <Typography variant="h6" gutterBottom>
-                  {title}
-                </Typography>
+              <Link
+                href={`/events/${eventId}?tab=discussions&postId=${id}`}
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                <Stack direction="column" gap={0}>
+                  <Typography variant="h6" gutterBottom>
+                    {title}
+                  </Typography>
 
-                <Box
-                  sx={{
-                    minHeight: '55px',
-                    color: 'grey.500',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: '6',
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  <MarkdownVisualizer content={body} isPreview={true} />
-                </Box>
-              </Stack>
+                  <Box
+                    sx={{
+                      minHeight: '55px',
+                      color: 'grey.500',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: '6',
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    <MarkdownVisualizer content={body} isPreview={true} />
+                  </Box>
+                </Stack>
+              </Link>
               <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -129,7 +160,7 @@ const PostCard = ({
                   />
                   <PostButton
                     icon={<ArrowUpOnSquareIcon size={4} />}
-                    onClick={() => {}}
+                    onClick={() => handleShare()}
                   />
                 </Stack>
               </Stack>
@@ -137,7 +168,14 @@ const PostCard = ({
           </Box>
         </CardContentCustom>
       </Box>
-    </Link>
+
+      {/* Share Modal */}
+      <ShareModal
+        discussionTitle={title}
+        openShareModal={openShareModal}
+        setOpenShareModal={setOpenShareModal}
+      />
+    </>
   );
 };
 

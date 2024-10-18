@@ -50,7 +50,7 @@ export const akashaBeamToMarkdown = (
       eventId: eventId,
       likes: 0,
       replies: beam.reflectionsCount,
-      tags: beam.tags?.map((tag) => tag.value),
+      tags: beam.tags ? beam.tags.map((tag) => tag.value) : [],
     });
   }
 
@@ -231,13 +231,12 @@ const processImages = (imageData: {
   if (!imageData) {
     return '';
   }
-  console.log('imageData', imageData);
   const alt = imageData.images[0].name || '';
   const caption = imageData.caption || '';
   let markdown = '';
 
   for (const img of imageData.images) {
-    markdown += `![${alt}](${buildIpfsUrl(img.src)})`;
+    markdown += `<img src="${buildIpfsUrl(img.src)}" alt="${alt}" width="${img.size.width}" height="${img.size.height}" />`;
   }
   if (caption) {
     markdown += `\n*${caption}*`;
@@ -246,7 +245,9 @@ const processImages = (imageData: {
   return markdown;
 };
 
-const buildIpfsUrl = (ipfsUrl: string): string => {
+export const buildIpfsUrl = (ipfsUrl: string): string => {
+  if (!ipfsUrl) return '';
+
   if (ipfsUrl.startsWith('ipfs://')) {
     const ipfsHash = ipfsUrl.split('ipfs://')[1];
     return `https://${ipfsHash}.ipfs.w3s.link`;

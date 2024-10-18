@@ -142,7 +142,7 @@ const Home = () => {
       {tabName === 'sessions' && (
         <Sessions eventData={eventData} option={urlOption} />
       )}
-      {tabName === 'discussions' && <Discussions />}
+      {tabName === 'discussions' && <Discussions eventId={eventId} />}
     </Stack>
   );
 };

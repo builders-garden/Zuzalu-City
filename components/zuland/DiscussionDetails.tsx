@@ -13,19 +13,20 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
+  CircularProgress,
 } from '@mui/material';
 
 import Drawer from '@/components/drawer';
 import { ZuButton } from '@/components/core';
 import TopicChip from './TopicChip';
-import SortChip from './SortChip';
 import CommentDetails from './CommentDetails';
 import MarkdownVisualizer from './MarkdownVisualizer';
 import ReplyForm from './ReplyForm';
-import { Post } from '@/utils/akasha/beam-to-markdown';
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
 import DiscussionSidebar from './DiscussionSidebar';
 import ReportPostModal from '@/components/modals/Zuland/ReportPostModal';
 import ShareModal from '@/components/modals/Zuland/ShareModal';
+import SortList from './SortList';
 
 import {
   createReflection,
@@ -38,8 +39,6 @@ import {
 import {
   ChatBubbleIcon,
   FlagIcon,
-  SparklesIcon,
-  ClockIcon,
   ArrowUpOnSquareIcon,
 } from '@/components/icons';
 
@@ -76,14 +75,15 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const [selectedSort, setSelectedSort] = useState<string>('NEW');
+  const [selectedReflectionsSort, setSelectedReflectionsSort] =
+    useState<string>('NEW');
   const [openReportModal, setOpenReportModal] = useState(false);
   const [openShareModal, setOpenShareModal] = useState(false);
 
   const [showReplyForm, setShowReplyForm] = useState(false);
   const replyFormRef = useRef<HTMLDivElement>(null);
 
-  const [openProfileDrawer, setOpenProfileDrawer] = useState(false);
+  const [openProfileDrawer, setOpenProfileDrawer] = useState<boolean>(false);
 
   const postId = useSearchParams().get('postId');
   const [reflectionCount, setReflectionCount] = useState<number>(0);
@@ -91,7 +91,11 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
     [],
   );
 
-  const { data: reflectionsData, isLoading } = useQuery({
+  const {
+    data: reflectionsData,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ['reflections', postId],
     queryFn: async () => {
       if (!postId) return null;
@@ -110,6 +114,17 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
       setReflectionCount(reflectionsData.reflectionsCount);
     }
   }, [reflectionsData]);
+
+  useEffect(() => {
+    const sortedReflections = reflections.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return selectedReflectionsSort === 'OLDEST'
+        ? dateA.getTime() - dateB.getTime()
+        : dateB.getTime() - dateA.getTime();
+    });
+    setReflections(sortedReflections);
+  }, [selectedReflectionsSort]);
 
   const handleShare = () => {
     if (isMobile && navigator.share) {
@@ -189,28 +204,30 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
 
   return (
     <div>
+      {/* Profile Sidebar */}
+      <Drawer
+        open={openProfileDrawer}
+        onClose={toggleProfileDrawer}
+        onOpen={toggleProfileDrawer}
+      >
+        <DiscussionSidebar
+          discussion={discussion}
+          handleClose={toggleProfileDrawer}
+        />
+      </Drawer>
       <Stack spacing={3} sx={{ width: '100%' }}>
-        {/* Profile Sidebar */}
-        <Drawer
-          open={openProfileDrawer}
-          onClose={toggleProfileDrawer}
-          onOpen={toggleProfileDrawer}
-        >
-          <DiscussionSidebar
-            discussion={discussion}
-            handleClose={toggleProfileDrawer}
-          />
-        </Drawer>
         <Typography variant="h4">{discussion?.title}</Typography>
         <Stack
           direction="row"
           spacing={1}
           alignItems="center"
-          onClick={toggleProfileDrawer}
           sx={{ cursor: 'pointer' }}
+          onClick={toggleProfileDrawer}
         >
           <Avatar
-            src={discussion?.author.akashaProfile.avatar?.default.src}
+            src={buildIpfsUrl(
+              discussion?.author.akashaProfile.avatar?.default.src,
+            )}
             alt={discussion?.author.akashaProfile.name}
             sx={{ width: 32, height: 32 }}
           />
@@ -334,38 +351,12 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
               {reflectionCount} {reflectionCount === 1 ? 'Reply' : 'Replies'}
             </Typography>
           </Stack>
-          <Stack
-            spacing="10px"
-            direction="row"
-            sx={{
-              flexWrap: 'wrap',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-            }}
-          >
-            <Typography
-              variant="body1"
-              sx={{
-                fontSize: '14px',
-                fontWeight: 500,
-                lineHeight: '160%',
-              }}
-            >
-              Sort by
-            </Typography>
-            <SortChip
-              label="Oldest"
-              selected={selectedSort === 'OLDEST'}
-              onClick={() => setSelectedSort('OLDEST')}
-              icon={<ClockIcon size={4} />}
-            />
-            <SortChip
-              label="New"
-              selected={selectedSort === 'NEW'}
-              onClick={() => setSelectedSort('NEW')}
-              icon={<SparklesIcon size={4} />}
-            />
-          </Stack>
+
+          {/* Sort List */}
+          <SortList
+            selectedSort={selectedReflectionsSort}
+            setSelectedSort={setSelectedReflectionsSort}
+          />
         </Stack>
         <Divider />
 
@@ -378,6 +369,20 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
               onReplySubmit={handleReplySubmit}
             />
           ))}
+        </Stack>
+
+        {/* Pagination */}
+        <Stack direction="row" justifyContent="center" spacing="10px">
+          <ZuButton sx={{ width: '150px', display: 'flex', gap: '10px' }}>
+            {isLoading || isFetching ? (
+              <>
+                <CircularProgress size="20px" color="info" />
+                Loading...
+              </>
+            ) : (
+              <>Load More</>
+            )}
+          </ZuButton>
         </Stack>
       </Stack>
     </div>

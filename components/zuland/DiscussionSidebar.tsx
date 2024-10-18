@@ -5,9 +5,17 @@ import {
   TelegramIcon,
   TwitterIcon,
   XMarkIcon,
+  ChainIcon,
 } from '@/components/icons';
-import { Post } from '@/utils/akasha/beam-to-markdown';
-import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
+import {
+  Avatar,
+  Box,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import Link from 'next/link';
 
 interface SidebarProps {
@@ -54,12 +62,26 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
 
       <Box display="flex" flexDirection="column" gap="20px" padding={3}>
         <Box bgcolor="#262626" borderRadius="10px" padding="20px">
-          <Typography variant="h6">
-            {discussion?.author.akashaProfile.id.slice(0, 6)}
-          </Typography>
-          <Typography variant="body2">
-            {discussion?.author.akashaProfile.description}
-          </Typography>
+          <Stack
+            marginBottom="20px"
+            display="flex"
+            direction="column"
+            gap="10px"
+          >
+            <Avatar
+              src={buildIpfsUrl(
+                discussion?.author.akashaProfile.avatar?.default.src,
+              )}
+              alt={discussion?.author.akashaProfile.name}
+              sx={{ width: 32, height: 32 }}
+            />
+            <Typography variant="h6">
+              {discussion?.author.akashaProfile.name}
+            </Typography>
+            <Typography variant="body2">
+              {discussion?.author.akashaProfile.description}
+            </Typography>
+          </Stack>
           <Box
             sx={{
               display: 'flex',
@@ -69,7 +91,7 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
           >
             <Typography variant="subtitle2">Address</Typography>
             <Typography variant="body2" color="text.primary">
-              {`${discussion?.author.akashaProfile.id.slice(0, 6)}...${discussion?.author.akashaProfile.id.slice(-4)}`}
+              {discussion?.author.akashaProfile.did.id}
             </Typography>
           </Box>
           <Stack
@@ -90,66 +112,25 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
               alignItems="center"
               sx={{ padding: '10px' }}
             >
-              <Link
-                href={`https://x.com/${discussion?.author.akashaProfile.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <ZuButton
-                  sx={{
-                    color: 'white',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '10px 10px',
-                  }}
+              {discussion?.author.akashaProfile.links?.map((link) => (
+                <Link
+                  key={link?.href}
+                  href={link?.href}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                  target="_blank"
                 >
-                  <TwitterIcon width="20px" height="20px" />
-                </ZuButton>
-              </Link>
-              <Link
-                href={`https://discord.gg/${discussion?.author.akashaProfile.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <ZuButton
-                  sx={{
-                    color: 'white',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '10px 10px',
-                  }}
-                >
-                  <DiscordIcon width="20px" height="20px" />
-                </ZuButton>
-              </Link>
-              <Link
-                href={`https://t.me/${discussion?.author.akashaProfile.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <ZuButton
-                  sx={{
-                    color: 'white',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '10px 10px',
-                  }}
-                >
-                  <TelegramIcon width="20px" height="20px" />
-                </ZuButton>
-              </Link>
-              <Link
-                href={`https://warpcast.com/${discussion?.author.akashaProfile.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <ZuButton
-                  sx={{
-                    color: 'white',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '10px 10px',
-                  }}
-                >
-                  <FarcasterIcon width="20px" height="20px" />
-                </ZuButton>
-              </Link>
+                  <ZuButton
+                    sx={{
+                      color: 'white',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      padding: '10px 10px',
+                    }}
+                  >
+                    {getIconFromLink(link?.href)}
+                  </ZuButton>
+                </Link>
+              ))}
             </Stack>
           </Stack>
           <Stack
@@ -204,6 +185,28 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
       </Box>
     </Box>
   );
+};
+
+const getIconFromLink = (link: string) => {
+  if (
+    link.startsWith('https://x.com/') ||
+    link.startsWith('https://twitter.com/')
+  ) {
+    return <TwitterIcon width="20px" height="20px" />;
+  }
+  if (
+    link.startsWith('https://discord.gg/') ||
+    link.startsWith('https://discord.com/')
+  ) {
+    return <DiscordIcon width="20px" height="20px" />;
+  }
+  if (link.startsWith('https://t.me/')) {
+    return <TelegramIcon width="20px" height="20px" />;
+  }
+  if (link.startsWith('https://warpcast.com/')) {
+    return <FarcasterIcon width="20px" height="20px" />;
+  }
+  return <ChainIcon width="20px" height="20px" />;
 };
 
 export default DiscussionSidebar;
