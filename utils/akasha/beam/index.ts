@@ -8,7 +8,11 @@ import {
   SortOrder,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import akashaSdk from '../akasha';
-import { BeamsByAuthorDid, ZulandReadableBeam } from '../akasha.d';
+import {
+  AkashaPageInfo,
+  BeamsByAuthorDid,
+  ZulandReadableBeam,
+} from '../akasha.d';
 import {
   extractBeamReadableContent,
   extractBeamsReadableContent,
@@ -151,14 +155,65 @@ export async function getReadableBeams(options?: {
   last?: number;
   filters?: AkashaBeamFiltersInput;
   sorting?: AkashaBeamSortingInput;
-}): Promise<ZulandReadableBeam[]> {
+}): Promise<{
+  edges: Array<{ cursor: string | undefined; node: ZulandReadableBeam }>;
+  pageInfo: AkashaPageInfo;
+}> {
   const beams = await getBeams(options);
   if (!beams || !beams.edges) {
-    return [];
+    return {
+      edges: [],
+      pageInfo: {
+        startCursor: null,
+        endCursor: null,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
   }
-  return await extractBeamsReadableContent(
-    beams.edges.map((beam) => beam?.node) as AkashaBeam[],
-  );
+  return {
+    edges: await Promise.all(
+      beams.edges.map(async (edge) => {
+        return {
+          cursor: edge?.cursor,
+          node: await extractBeamReadableContent(edge?.node as AkashaBeam),
+        };
+      }),
+    ),
+    pageInfo: beams.pageInfo,
+  };
+}
+
+export async function getZulandReadableBeams(
+  eventId: string,
+  options?: {
+    before?: string;
+    after?: string;
+    first?: number;
+    last?: number;
+    filters?: AkashaBeamFiltersInput;
+    sorting?: AkashaBeamSortingInput;
+  },
+): Promise<{
+  edges: Array<{ cursor: string | undefined; node: ZulandReadableBeam }>;
+  pageInfo: AkashaPageInfo;
+}> {
+  const zulandApp = await getAppByEventId(eventId);
+  if (!zulandApp) {
+    throw new Error('App not found');
+  }
+  const appID = zulandApp.id;
+  const readableBeams = await getReadableBeams({
+    filters: {
+      where: {
+        appID: {
+          equalTo: appID,
+        },
+      },
+    },
+    ...options,
+  });
+  return readableBeams;
 }
 
 export async function getReadableBeamsByAuthorDid(

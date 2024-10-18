@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { Stack, Box, Typography, useTheme, useMediaQuery } from '@mui/material';
@@ -11,13 +11,7 @@ import SortChip from './SortChip';
 import PostCard from './PostCard';
 import DiscussionDetails from './DiscussionDetails';
 import NewPost from './NewPost';
-import {
-  ZulandReadableBeam,
-  extractBeamsReadableContent,
-  getAppByEventId,
-  getBeams,
-} from '@/utils/akasha';
-import { AkashaBeam } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AkashaConnectModal from './AkashaConnectModal';
@@ -102,32 +96,13 @@ const Discussions: React.FC = () => {
     setSelectedSort(sort);
   };
 
-  // const handleGetCurrentUser = async () => {
-  //   if (!currentUser) {
-  //     const currentUserResult = await akashaSdk.api.auth.getCurrentUser();
-  //     console.log('currentUserResult', currentUserResult);
-  //     setCurrentUser(currentUserResult ? currentUserResult : undefined);
-  //   }
-  // };
-
   const fetchBeams = async () => {
-    const app = await getAppByEventId(eventId);
-
-    const fetchedBeams = await getBeams({
+    const readableBeams = await getZulandReadableBeams(eventId, {
       first: 10,
-      filters: {
-        where: {
-          appID: {
-            equalTo: app?.id,
-          },
-        },
-      },
     });
 
-    if (fetchedBeams?.edges) {
-      return extractBeamsReadableContent(
-        fetchedBeams.edges.map((beam) => beam?.node) as AkashaBeam[],
-      );
+    if (readableBeams.edges) {
+      return readableBeams.edges.map((edge) => edge.node);
     }
 
     return [];
