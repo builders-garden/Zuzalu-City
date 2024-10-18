@@ -4,6 +4,7 @@ import {
   AkashaBeamInput,
   AkashaBeamSortingInput,
   AkashaContentBlockInput,
+  BeamLabeledInput,
   SortOrder,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import akashaSdk from '../akasha';
@@ -97,6 +98,7 @@ export async function createBeamFromBlocks(params: {
   eventId: string;
   active: boolean;
   blocks: AkashaContentBlockInput[];
+  tags?: Array<BeamLabeledInput>;
 }) {
   // step 0: retrieve the app and app version ID from the event ID
   const app = await getAppByEventId(params.eventId);
@@ -129,6 +131,7 @@ export async function createBeamFromBlocks(params: {
     appVersionID: appVersionID,
     createdAt: new Date().toISOString(),
     content: beamContent,
+    tags: params.tags,
   };
   const beam = await createBeam(beamToCreate);
   console.log('Beam created');

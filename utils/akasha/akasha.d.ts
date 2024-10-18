@@ -105,6 +105,63 @@ export type ZulandReadbleBlock = {
   order: number;
 };
 
+export type AkashaProfileStats = {
+  akashaFollowListCount: number;
+  akashaBeamListCount: number;
+  akashaReflectListCount: number;
+  isViewer: boolean;
+  akashaProfile?: {
+    followersCount: number;
+    id: string;
+    name: string;
+    description?: string | null;
+    appVersionID: any;
+    appID: any;
+    createdAt: any;
+    nsfw?: boolean | null;
+    did: {
+      id: string;
+      isViewer: boolean;
+    };
+    links?: Array<{
+      href: any;
+      label?: string | null;
+    } | null> | null;
+    background?: {
+      alternatives?: Array<{
+        src: any;
+        width: number;
+        height: number;
+      } | null> | null;
+      default: {
+        src: any;
+        width: number;
+        height: number;
+      };
+    } | null;
+    avatar?: {
+      default: {
+        src: any;
+        width: number;
+        height: number;
+      };
+      alternatives?: Array<{
+        src: any;
+        width: number;
+        height: number;
+      } | null> | null;
+    } | null;
+    followers: {
+      pageInfo: {
+        startCursor?: string | null;
+        endCursor?: string | null;
+        hasPreviousPage: boolean;
+        hasNextPage: boolean;
+      };
+    };
+  };
+};
+
 export type ZulandProfileInput = {
   avatar?: {
     default: ProfileImageSourceInput;

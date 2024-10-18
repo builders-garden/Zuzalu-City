@@ -1,7 +1,8 @@
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 import akashaSdk from '../akasha';
-import { ZulandProfileInput } from '../akasha.d';
+import { AkashaProfileStats, ZulandProfileInput } from '../akasha.d';
 import { SetOptionsInput } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import { getAppByEventId } from '../app';
 
 export async function getProfileByDid(did: string): Promise<{
   akashaProfile: AkashaProfile;
@@ -24,28 +25,43 @@ export async function getProfileByDid(did: string): Promise<{
  */
 export async function getUserProfile() {
   const profile = await akashaSdk.services.gql.client.GetMyProfile();
-  return profile;
+  return profile.viewer?.akashaProfile ?? null;
 }
 
-export async function getProfileById(id: string) {
+export async function getProfileById(
+  id: string,
+): Promise<AkashaProfile | null> {
   const profile = await akashaSdk.services.gql.client.GetProfileByID({
     id,
   });
-  return profile;
+  if (!profile || !profile.node || Object.keys(profile.node).length === 0) {
+    return null;
+  }
+  return profile.node as AkashaProfile;
 }
 
-export async function getProfileStatsByDid(did: string) {
+export async function getProfileStatsByDid(
+  did: string,
+): Promise<AkashaProfileStats | null> {
   const profileStats = await akashaSdk.services.gql.client.GetProfileStatsByDid(
     {
       id: did,
     },
   );
-  return profileStats.node;
+  if (
+    !profileStats ||
+    !profileStats.node ||
+    Object.keys(profileStats.node).length === 0
+  ) {
+    return null;
+  }
+  return profileStats.node as AkashaProfileStats;
 }
 
-// TODO: make this function dynamic getting the appID and appVersionID from the SDK
 export async function createProfile(
   profile: ZulandProfileInput,
+  appID: string,
+  appVersionID: string,
   clientMutationId?: string,
   options?: SetOptionsInput,
 ) {
@@ -55,10 +71,8 @@ export async function createProfile(
         i: {
           clientMutationId: clientMutationId,
           content: {
-            appID:
-              'k2t6wzhkhabz5htw8tav1jfb23gh2svpnlrdogwsx7713ce4x86g6ome3lqlel',
-            appVersionID:
-              'k2t6wzhkhabz19k3ik14jzmon7wnexx6h97nc6hz83vlfegv0iuftjlzfrzkv8',
+            appID,
+            appVersionID,
             createdAt: new Date().toISOString(),
             ...profile,
           },
@@ -71,4 +85,31 @@ export async function createProfile(
     );
 
   return createProfileResponse.setAkashaProfile;
+}
+
+export async function createZulandProfile(
+  eventId: string,
+  profile: ZulandProfileInput,
+  clientMutationId?: string,
+  options?: SetOptionsInput,
+) {
+  const zulandApp = await getAppByEventId(eventId);
+  if (!zulandApp) {
+    throw new Error('App not found for the given event ID');
+  }
+  const appID = zulandApp.id;
+  const appVersionID = zulandApp.releases?.edges?.[0]?.node?.id;
+  if (!appVersionID) {
+    throw new Error('App version not found for this app');
+  }
+
+  const createProfileResponse = await createProfile(
+    profile,
+    appID,
+    appVersionID,
+    clientMutationId,
+    options,
+  );
+
+  return createProfileResponse?.document ?? null;
 }
