@@ -68,13 +68,13 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
       <Stack spacing={2} sx={{ marginLeft: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <Avatar
-            src={reflection.author.akashaProfile.avatar?.default.src}
-            alt={reflection.author.akashaProfile.name}
+            src={reflection.author.akashaProfile?.avatar?.default.src}
+            alt={reflection.author.akashaProfile?.name}
             sx={{ width: 32, height: 32 }}
           />
           <Stack>
             <Typography variant="body2">
-              {reflection.author.akashaProfile.name}
+              {reflection.author.akashaProfile?.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {standardDateFormat(reflection.createdAt)}
@@ -145,7 +145,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
               eventId={eventId}
               onCancel={() => setShowReplyForm(false)}
               onReplySubmit={handleReplySubmit}
-              replyingTo={reflection.author.akashaProfile.name}
+              replyingTo={reflection.author.akashaProfile?.name}
             />
             <div ref={replyFormRef} />
           </div>

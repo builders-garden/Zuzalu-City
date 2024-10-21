@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCeramicContext } from '@/context/CeramicContext';
+import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
+
+import { createZulandProfile } from '@/utils/akasha';
 
 import {
   Modal,
@@ -11,21 +15,20 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
-import { useQuery } from '@tanstack/react-query';
-import { createZulandProfile, getProfileStatsByDid } from '@/utils/akasha';
-import { useCeramicContext } from '@/context/CeramicContext';
 import { ZuButton } from '@/components/core';
-import { getIconFromLink } from '@/components/zuland/DiscussionSidebar';
+
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { getIconFromLink } from '@/components/zuland/DiscussionSidebar';
 
 interface AkashaCreateProfileModalProps {
   eventId: string;
+  reOpen?: boolean;
 }
 
 const AkashaCreateProfileModal = ({
   eventId,
+  reOpen,
 }: AkashaCreateProfileModalProps) => {
   const MAX_NAME_LENGTH = 32;
   const MAX_DESCRIPTION_LENGTH = 100;
@@ -45,10 +48,16 @@ const AkashaCreateProfileModal = ({
   const [resultMessage, setResultMessage] = useState('');
 
   useEffect(() => {
-    if (!currentAkashaUserStats) {
+    if (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile) {
       setOpenModal(true);
     }
-  }, [currentAkashaUserStats]);
+  }, []);
+
+  useEffect(() => {
+    if (reOpen) {
+      setOpenModal(true);
+    }
+  }, [reOpen]);
 
   const handleCloseSnackbar = (
     event?: React.SyntheticEvent | Event,

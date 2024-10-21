@@ -89,12 +89,12 @@ const PostCard = ({
             <Stack flex={1} justifyContent="space-between" gap={2}>
               <Stack direction="row" spacing="8px" alignItems="center">
                 <Avatar
-                  src={buildIpfsUrl(author.akashaProfile.avatar?.default.src)}
-                  alt={author.akashaProfile.name}
+                  src={buildIpfsUrl(author.akashaProfile?.avatar?.default.src)}
+                  alt={author.akashaProfile?.name}
                   sx={{ width: 28, height: 28 }}
                 />
                 <Typography variant="body2">
-                  {author.akashaProfile.name}
+                  {author.akashaProfile?.name}
                 </Typography>
                 <Typography variant="caption" color="grey.400">
                   /

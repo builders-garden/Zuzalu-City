@@ -60,16 +60,16 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
           >
             <Avatar
               src={buildIpfsUrl(
-                discussion?.author.akashaProfile.avatar?.default.src,
+                discussion?.author.akashaProfile?.avatar?.default.src,
               )}
-              alt={discussion?.author.akashaProfile.name}
+              alt={discussion?.author.akashaProfile?.name}
               sx={{ width: 32, height: 32 }}
             />
             <Typography variant="h6">
-              {discussion?.author.akashaProfile.name}
+              {discussion?.author.akashaProfile?.name}
             </Typography>
             <Typography variant="body2">
-              {discussion?.author.akashaProfile.description}
+              {discussion?.author.akashaProfile?.description}
             </Typography>
           </Stack>
           <Box
@@ -81,7 +81,7 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
           >
             <Typography variant="subtitle2">Address</Typography>
             <Typography variant="body2" color="text.primary">
-              {discussion?.author.akashaProfile.did.id}
+              {discussion?.author.akashaProfile?.did.id}
             </Typography>
           </Box>
           <Stack
@@ -102,7 +102,7 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
               alignItems="center"
               sx={{ padding: '10px' }}
             >
-              {discussion?.author.akashaProfile.links?.map((link) => (
+              {discussion?.author.akashaProfile?.links?.map((link) => (
                 <Link
                   key={link?.href}
                   href={link?.href}

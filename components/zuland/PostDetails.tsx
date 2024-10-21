@@ -202,14 +202,14 @@ const PostDetails: React.FC<PostDetailsProps> = ({
         >
           <Avatar
             src={buildIpfsUrl(
-              discussion?.author.akashaProfile.avatar?.default.src,
+              discussion?.author.akashaProfile?.avatar?.default.src,
             )}
-            alt={discussion?.author.akashaProfile.name}
+            alt={discussion?.author.akashaProfile?.name}
             sx={{ width: 32, height: 32 }}
           />
           <Stack direction="column" justifyContent="space-around">
             <Typography variant="body2">
-              {discussion?.author.akashaProfile.name}
+              {discussion?.author.akashaProfile?.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {standardDateFormat(discussion.createdAt)}

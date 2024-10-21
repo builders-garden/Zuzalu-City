@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
 import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 
@@ -21,6 +22,10 @@ const NewPost: React.FC<NewPostProps> = ({
   onCancel,
   onPostCreated,
 }) => {
+  const { currentAkashaUserStats } = useAkashaAuthStore();
+
+  const [reopenCreateProfileModal, setReopenCreateProfileModal] =
+    useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -34,6 +39,10 @@ const NewPost: React.FC<NewPostProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile) {
+      setReopenCreateProfileModal(true);
+      return;
+    }
     try {
       await createBeamPassingBlocks();
       onPostCreated();
@@ -180,7 +189,10 @@ const NewPost: React.FC<NewPostProps> = ({
           </ZuButton>
         </Stack>
       </Stack>
-      <AkashaCreateProfileModal eventId={eventId} />
+      <AkashaCreateProfileModal
+        eventId={eventId}
+        reOpen={reopenCreateProfileModal}
+      />
     </>
   );
 };
