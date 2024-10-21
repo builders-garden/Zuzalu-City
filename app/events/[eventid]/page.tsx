@@ -14,7 +14,7 @@ const Home = () => {
   const [eventData, setEventData] = useState<Event>();
   const { composeClient, ceramic } = useCeramicContext();
   const [sessionView, setSessionView] = useState<boolean>(false);
-  const [discussionsView, setDiscussionsView] = useState<boolean>(true);
+  const [discussionsView, setDiscussionsView] = useState<boolean>(false);
   const [verify, setVerify] = useState<boolean>(false);
   const eventId = params.eventid.toString();
   const [urlOption, setUrlOption] = useState<string>('');

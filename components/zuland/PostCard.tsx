@@ -65,7 +65,7 @@ const PostCard = ({
           text: 'Check out this discussion!',
           url: window.location.href,
         })
-        .catch((error) => console.log('Error sharing:', error));
+        .catch((error) => console.error('Error sharing:', error));
     } else {
       setOpenShareModal(true);
     }

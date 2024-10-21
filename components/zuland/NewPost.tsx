@@ -9,17 +9,12 @@ interface NewPostProps {
   eventId: string;
   onCancel: () => void;
   onPostCreated: () => void;
-  currentUser: {
-    id?: string;
-    ethAddress?: string;
-  };
 }
 
 const NewPost: React.FC<NewPostProps> = ({
   eventId,
   onCancel,
   onPostCreated,
-  currentUser,
 }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -34,7 +29,6 @@ const NewPost: React.FC<NewPostProps> = ({
   };
 
   const handleSubmit = async () => {
-    console.log({ title, content, selectedTopics, eventId });
     try {
       await createBeamPassingBlocks();
       onPostCreated();

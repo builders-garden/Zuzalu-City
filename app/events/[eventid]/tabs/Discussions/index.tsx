@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useQueryState } from 'nuqs';
+import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 
 import { Stack } from '@mui/material';
 import DiscussionsHome from '@/components/zuland/DiscussionsHome';
-import DiscussionDetails from '@/components/zuland/DiscussionDetails';
+import PostDetails from '@/components/zuland/PostDetails';
 import NewPost from '@/components/zuland/NewPost';
 
 import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
@@ -19,6 +20,7 @@ interface DiscussionsProps {
 
 const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
+  const { currentAkashaUser } = useAkashaAuthStore();
 
   const [selectedSort, setSelectedSort] = useState<string>('NEW');
   const [beams, setBeams] = useState<Array<ZulandReadableBeam> | null>(null);
@@ -29,15 +31,6 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   const [postId, setPostId] = useQueryState('postId', {
     defaultValue: '',
   });
-  const [currentUser, setCurrentUser] = useState<
-    | ({
-        id?: string;
-        ethAddress?: string;
-      } & {
-        isNewUser?: boolean;
-      })
-    | undefined
-  >(undefined);
 
   const {
     data: fetchedBeams,
@@ -46,25 +39,17 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
     error,
   } = useQuery({
     queryKey: ['beams', eventId],
-    queryFn: () => fetchBeams(),
+    queryFn: async () => {
+      const readableBeams = await getZulandReadableBeams(eventId, {
+        first: 10,
+      });
+      return readableBeams.edges
+        ? readableBeams.edges.map((edge) => edge.node)
+        : [];
+    },
   });
 
   const selectedPost = posts.find((post) => post.id === postId);
-
-  useEffect(() => {
-    if (fetchedBeams) {
-      setBeams(fetchedBeams);
-      const newPosts = akashaBeamToMarkdown(fetchedBeams, eventId);
-      const sortedPosts = getSortedPosts(newPosts, selectedSort);
-      // console.log({ fetchedBeams, sortedPosts });
-      setPosts(sortedPosts);
-    }
-  }, [fetchedBeams]);
-
-  useEffect(() => {
-    const sortedPosts = getSortedPosts(posts, selectedSort);
-    setPosts(sortedPosts);
-  }, [selectedSort]);
 
   const getSortedPosts = (posts: Post[], sort: string): Post[] => {
     if (sort === 'NEW' || sort === 'OLDEST') {
@@ -80,14 +65,22 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
     return posts;
   };
 
-  const fetchBeams = async () => {
-    const readableBeams = await getZulandReadableBeams(eventId, {
-      first: 15,
-    });
-    return readableBeams.edges
-      ? readableBeams.edges.map((edge) => edge.node)
-      : [];
-  };
+  useEffect(() => {
+    if (fetchedBeams) {
+      setBeams(fetchedBeams);
+      const newPosts = akashaBeamToMarkdown(fetchedBeams, eventId);
+      const sortedPosts = getSortedPosts(newPosts, selectedSort);
+      // console.log({ fetchedBeams, newPosts });
+      setPosts(sortedPosts);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedBeams]);
+
+  useEffect(() => {
+    const sortedPosts = getSortedPosts(posts, selectedSort);
+    setPosts(sortedPosts);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSort]);
 
   const handleNewPostCreated = () => {
     queryClient.invalidateQueries({ queryKey: ['beams', eventId] });
@@ -95,38 +88,41 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   };
 
   return (
-    <Stack
-      justifyContent="center"
-      alignItems="center"
-      bgcolor="#222222"
-      width="100%"
-    >
-      {postId && selectedPost ? (
-        <Container>
-          <DiscussionDetails discussion={selectedPost} postId={postId} />
-        </Container>
-      ) : isNewPostOpen !== '' && currentUser ? (
-        <Container>
-          <NewPost
+    <>
+      <Stack
+        justifyContent="center"
+        alignItems="center"
+        bgcolor="#222222"
+        width="100%"
+      >
+        {postId && selectedPost ? (
+          <Container>
+            <PostDetails
+              postId={postId}
+              discussion={selectedPost}
+              eventId={eventId}
+            />
+          </Container>
+        ) : isNewPostOpen !== '' && currentAkashaUser ? (
+          <Container>
+            <NewPost
+              eventId={eventId}
+              onCancel={() => setIsNewPostOpen('')}
+              onPostCreated={handleNewPostCreated}
+            />
+          </Container>
+        ) : (
+          <DiscussionsHome
             eventId={eventId}
-            onCancel={() => setIsNewPostOpen('')}
-            onPostCreated={handleNewPostCreated}
-            currentUser={currentUser}
+            posts={posts}
+            isLoadingBeams={isLoadingBeams || isFetchingBeams}
+            setIsNewPostOpen={setIsNewPostOpen}
+            selectedSort={selectedSort}
+            setSelectedSort={setSelectedSort}
           />
-        </Container>
-      ) : (
-        <DiscussionsHome
-          eventId={eventId}
-          currentUser={currentUser}
-          setCurrentUser={setCurrentUser}
-          posts={posts}
-          isLoadingBeams={isLoadingBeams || isFetchingBeams}
-          setIsNewPostOpen={setIsNewPostOpen}
-          selectedSort={selectedSort}
-          setSelectedSort={setSelectedSort}
-        />
-      )}
-    </Stack>
+        )}
+      </Stack>
+    </>
   );
 };
 

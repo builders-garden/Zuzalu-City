@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ZuButton } from '@/components/core';
 import {
   DiscordIcon,
@@ -8,15 +9,7 @@ import {
   ChainIcon,
 } from '@/components/icons';
 import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
-import {
-  Avatar,
-  Box,
-  Stack,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
-import Link from 'next/link';
+import { Avatar, Box, Stack, Typography } from '@mui/material';
 
 interface SidebarProps {
   handleClose: () => void;
@@ -24,9 +17,6 @@ interface SidebarProps {
 }
 
 const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   return (
     <Box
       sx={{
@@ -133,41 +123,7 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
               ))}
             </Stack>
           </Stack>
-          <Stack
-            direction="column"
-            sx={{
-              borderTop: '1px solid',
-              borderColor: 'primary.light',
-              paddingTop: '10px',
-            }}
-          >
-            <Typography variant="subtitle2">Events</Typography>
-            <Stack
-              direction={isMobile ? 'column' : 'row'}
-              spacing={1}
-              width="100%"
-              sx={{ padding: '10px' }}
-            >
-              <ZuButton
-                sx={{
-                  width: '100%',
-                  padding: '10px 20px',
-                  borderRadius: '10px',
-                }}
-              >
-                <Typography variant="body2">Zuitzerland</Typography>
-              </ZuButton>
-              <ZuButton
-                sx={{
-                  width: '100%',
-                  padding: '10px 20px',
-                  borderRadius: '10px',
-                }}
-              >
-                <Typography variant="body2">ZuVillage Georgia</Typography>
-              </ZuButton>
-            </Stack>
-          </Stack>
+
           <Stack
             direction="column"
             sx={{

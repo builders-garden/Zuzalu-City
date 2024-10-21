@@ -1,9 +1,4 @@
-import {
-  ZulandReadableBeam,
-  ZulandReadableBlockContent,
-  ZulandReadbleBlock,
-} from '@/utils/akasha';
-import { AkashaContentBlock } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import { ZulandReadableBeam, ZulandReadbleBlock } from '@/utils/akasha';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 
 /**
@@ -17,9 +12,6 @@ export interface Post {
     akashaProfile: AkashaProfile;
     isViewer: boolean;
   };
-  // author: {
-  //   id: string;
-  // };
   tags?: string[];
   createdAt: string;
   applicationID: string;

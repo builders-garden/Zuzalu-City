@@ -2,6 +2,7 @@
 
 import React, { useState, SetStateAction, Dispatch } from 'react';
 import Link from 'next/link';
+import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 
 import {
   Stack,
@@ -21,42 +22,41 @@ import AkashaConnectModal from '@/components/modals/AkashaConnectModal';
 import TopicList from '@/components/zuland/TopicList';
 import { Post } from '@/utils/akasha/beam-to-markdown';
 
-type IUser =
-  | ({
-      id?: string;
-      ethAddress?: string;
-    } & {
-      isNewUser?: boolean;
-    })
-  | undefined;
-
 interface DiscussionsHomeProps {
   eventId: string;
-  currentUser: IUser;
   posts: Post[];
   isLoadingBeams: boolean;
   setIsNewPostOpen: (value: string) => void;
-  setCurrentUser: Dispatch<SetStateAction<IUser>>;
   selectedSort: string;
   setSelectedSort: Dispatch<SetStateAction<string>>;
 }
 
 const DiscussionsHome = ({
   eventId,
-  currentUser,
   posts,
   isLoadingBeams,
   setIsNewPostOpen,
-  setCurrentUser,
   selectedSort,
   setSelectedSort,
 }: DiscussionsHomeProps) => {
+  const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [showCheckUserConnectionModal, setShowCheckUserConnectionModal] =
-    useState(false);
+  const [showAkashaModal, setShowAkashaModal] = useState(false);
+
+  const handleSignInUser = () => {
+    setShowAkashaModal(false);
+    loginAkasha()
+      .then(() => {
+        setIsNewPostOpen('true');
+      })
+      .catch((err) => {
+        console.error('err', err);
+      });
+  };
 
   return (
     <>
@@ -127,8 +127,8 @@ const DiscussionsHome = ({
                 startIcon={<PlusCircleIcon size={5} />}
                 sx={{ padding: '10px 20px' }}
                 onClick={() => {
-                  if (currentUser === undefined) {
-                    setShowCheckUserConnectionModal(true);
+                  if (currentAkashaUser === null) {
+                    setShowAkashaModal(true);
                   }
                 }}
               >
@@ -173,12 +173,11 @@ const DiscussionsHome = ({
           </ZuButton>
         </Stack>
 
-        {showCheckUserConnectionModal && (
+        {showAkashaModal && (
           <AkashaConnectModal
-            showModal={showCheckUserConnectionModal}
-            setShowModal={setShowCheckUserConnectionModal}
-            setShowAuthenticatedPart={() => setIsNewPostOpen('true')}
-            setParentUserAuth={setCurrentUser}
+            showModal={showAkashaModal}
+            setShowModal={setShowAkashaModal}
+            onSuccess={() => handleSignInUser()}
           />
         )}
       </Container>

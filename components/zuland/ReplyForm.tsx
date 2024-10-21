@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, TextField, Button, Stack, Box } from '@mui/material';
-import TopicChip from './TopicChip';
-import akashaSdk from '@/utils/akasha/akasha';
+
+import { Typography, TextField, Stack } from '@mui/material';
 import { ZuButton } from '@/components/core';
+
+import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 
 interface ReplyFormProps {
   onCancel: () => void;
@@ -19,55 +20,19 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   onReplySubmit,
   replyingTo,
 }) => {
-  // Akasha User Authentication (required for creating a beam)
-  const [userAuth, setUserAuth] = useState<
-    | ({
-        id?: string;
-        ethAddress?: string;
-      } & {
-        isNewUser: boolean;
-      })
-    | null
-  >(null);
+  const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
   const [content, setContent] = useState('');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   useEffect(() => {
-    async function loginAkasha() {
-      try {
-        const authRes = await akashaSdk.api.auth.signIn({
-          provider: 2,
-          checkRegistered: false,
-          resumeSignIn: false,
-        });
-        setUserAuth(authRes.data);
-      } catch (error) {
-        console.error('Error logging in to Akasha', error);
-      }
-    }
-
-    if (!userAuth) {
+    if (!currentAkashaUser) {
       loginAkasha();
     }
-  }, [userAuth]);
-
-  const topics = [
-    'Announcement',
-    'TagOne',
-    'Event',
-    // Add more topics as needed
-  ];
-
-  const handleTopicClick = (topic: string) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic],
-    );
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAkashaUser]);
 
   const handleSubmit = () => {
-    onReplySubmit(content, selectedTopics);
+    onReplySubmit(content, []);
     setContent('');
-    setSelectedTopics([]);
   };
 
   return (
@@ -75,19 +40,6 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
       <Typography variant="body2">
         {replyingTo ? `Reply to ${replyingTo}` : 'Create a reply'}
       </Typography>
-      <Stack spacing={1}>
-        <Typography variant="body1">Add topics</Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {topics.map((topic) => (
-            <TopicChip
-              key={topic}
-              label={topic}
-              onClick={() => handleTopicClick(topic)}
-              selected={selectedTopics.includes(topic)}
-            />
-          ))}
-        </Box>
-      </Stack>
       <Stack spacing={1}>
         <Typography variant="body1">Compose your reply</Typography>
         <TextField

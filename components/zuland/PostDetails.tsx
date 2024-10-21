@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useSearchParams, useParams } from 'next/navigation';
 
 import {
   Stack,
@@ -22,12 +21,12 @@ import TopicChip from './TopicChip';
 import CommentDetails from './CommentDetails';
 import MarkdownVisualizer from './MarkdownVisualizer';
 import ReplyForm from './ReplyForm';
-import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
 import DiscussionSidebar from './DiscussionSidebar';
 import ReportPostModal from '@/components/modals/Zuland/ReportPostModal';
 import ShareModal from '@/components/modals/Zuland/ShareModal';
 import SortList from './SortList';
 
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
 import {
   createReflection,
   encodeSlateToBase64,
@@ -42,35 +41,18 @@ import {
   ArrowUpOnSquareIcon,
 } from '@/components/icons';
 
-interface DiscussionDetailsProps {
+interface PostDetailsProps {
   postId: string;
   discussion: Post;
+  eventId: string;
 }
-export type ReplyType = {
-  id: string;
-  author: {
-    name: string;
-    image: string;
-  };
-  date: string;
-  content: string;
-  likes: number;
-  replyTo?: {
-    author: {
-      image: string;
-      name: string;
-    };
-    content: string;
-  };
-};
 
-const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
+const PostDetails: React.FC<PostDetailsProps> = ({
+  postId,
   discussion,
+  eventId,
 }) => {
   const queryClient = useQueryClient();
-
-  const params = useParams();
-  const eventId = params.eventid.toString();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -85,7 +67,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
 
   const [openProfileDrawer, setOpenProfileDrawer] = useState<boolean>(false);
 
-  const postId = useSearchParams().get('postId');
   const [reflectionCount, setReflectionCount] = useState<number>(0);
   const [reflections, setReflections] = useState<ZulandReadableReflection[]>(
     [],
@@ -101,7 +82,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
       if (!postId) return null;
       return await getTopReadableReflectionsByBeamId(postId);
     },
-    enabled: !!postId,
   });
 
   useEffect(() => {
@@ -124,7 +104,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
         : dateB.getTime() - dateA.getTime();
     });
     setReflections(sortedReflections);
-  }, [selectedReflectionsSort]);
+  }, [selectedReflectionsSort, reflections]);
 
   const handleShare = () => {
     if (isMobile && navigator.share) {
@@ -134,7 +114,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
           text: 'Check out this discussion!',
           url: window.location.href,
         })
-        .catch((error) => console.log('Error sharing:', error));
+        .catch((error) => console.error('Error sharing:', error));
     } else {
       setOpenShareModal(true);
     }
@@ -184,23 +164,19 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
       });
 
       // Invalidate queries
-      if (postId) {
-        queryClient.invalidateQueries({ queryKey: ['reflections', postId] });
-        queryClient.invalidateQueries({ queryKey: ['beams', eventId] });
-        if (parentReflectionId) {
-          queryClient.invalidateQueries({
-            queryKey: ['childReflections', parentReflectionId],
-          });
-        }
+      queryClient.invalidateQueries({ queryKey: ['reflections', postId] });
+      queryClient.invalidateQueries({ queryKey: ['beams', eventId] });
+      if (parentReflectionId) {
+        queryClient.invalidateQueries({
+          queryKey: ['childReflections', parentReflectionId],
+        });
       }
     } catch (error) {
       console.error('Error creating reflection:', error);
     }
   };
 
-  const toggleProfileDrawer = useCallback(() => {
-    setOpenProfileDrawer((v) => !v);
-  }, []);
+  const toggleProfileDrawer = () => setOpenProfileDrawer((v) => !v);
 
   return (
     <div>
@@ -335,7 +311,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
           setOpenShareModal={setOpenShareModal}
         />
 
-        {/* Reply section */}
+        {/* Reply count and sort list section */}
         <Stack
           direction="row"
           gap={1}
@@ -352,7 +328,6 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
             </Typography>
           </Stack>
 
-          {/* Sort List */}
           <SortList
             selectedSort={selectedReflectionsSort}
             setSelectedSort={setSelectedReflectionsSort}
@@ -362,7 +337,7 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
 
         {/* Existing replies */}
         <Stack spacing={3}>
-          {reflections.map(async (reflection) => (
+          {reflections.map((reflection) => (
             <CommentDetails
               key={reflection.id}
               reflection={reflection}
@@ -389,4 +364,4 @@ const DiscussionDetails: React.FC<DiscussionDetailsProps> = ({
   );
 };
 
-export default DiscussionDetails;
+export default PostDetails;

@@ -3,7 +3,6 @@
 import { useState, Dispatch, SetStateAction, useEffect } from 'react';
 import { ZuButton, ZuInput } from '@/components/core';
 import { createApp, createAppRelease, getAppByEventId } from '@/utils/akasha';
-import akashaSdk from '@/utils/akasha/akasha';
 import {
   Dialog,
   DialogActions,
@@ -12,6 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 
 interface CreateDiscussionModalProps {
   showModal: boolean;
@@ -33,9 +33,12 @@ export default function CreateDiscussionModal({
   eventName,
   eventDescription,
 }: CreateDiscussionModalProps) {
+  const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
+
   const [displayName, setDisplayName] = useState<string>(eventName);
   const [description, setDescription] = useState<string>(eventDescription);
   const [appAlreadyExists, setAppAlreadyExists] = useState<boolean>(false);
+
   useEffect(() => {
     async function checkAppExists() {
       const appAlreadyExists = await getAppByEventId(eventId);
@@ -53,33 +56,14 @@ export default function CreateDiscussionModal({
       }
     }
     checkAppExists();
-  }, [eventId]);
+  }, [eventId, eventName, setShowModal, showToast]);
 
-  // akasha user auth
-  const [userAuth, setUserAuth] = useState<
-    | ({
-        id?: string;
-        ethAddress?: string;
-      } & {
-        isNewUser: boolean;
-      })
-    | null
-  >(null);
-
+  /* AKASHA login if not logged in */
   useEffect(() => {
-    async function loginAkasha() {
-      const authRes = await akashaSdk.api.auth.signIn({
-        provider: 2,
-        checkRegistered: false,
-        resumeSignIn: false,
-      });
-      setUserAuth(authRes.data);
-    }
-
-    if (!userAuth) {
+    if (!currentAkashaUser) {
       loginAkasha();
     }
-  }, [userAuth]);
+  }, [currentAkashaUser, loginAkasha]);
 
   const handleCreateDiscussion = async () => {
     try {
@@ -88,23 +72,31 @@ export default function CreateDiscussionModal({
         console.log('app already exists');
         return;
       }
-      const createAppResult = await createApp({
-        eventID: eventId,
-        displayName: displayName,
-        description: description,
-      });
-      if (createAppResult) {
-        const createAppReleaseResult = await createAppRelease({
-          applicationID: createAppResult?.document.id,
-          source: `https://zuzalu.city/events/${eventId}`,
-          version: '1.0.0',
+      /* Create Akasha app */
+      if (currentAkashaUser) {
+        const createAppResult = await createApp({
+          eventID: eventId,
+          displayName: displayName,
+          description: description,
         });
-        console.log('createAppReleaseResult', createAppReleaseResult);
+        if (createAppResult) {
+          const createAppReleaseResult = await createAppRelease({
+            applicationID: createAppResult?.document.id,
+            source: `https://zuzalu.city/events/${eventId}`,
+            version: '1.0.0',
+          });
+          console.log('createAppReleaseResult', createAppReleaseResult);
+          showToast(
+            `Successfully created Akasha discussion for "${eventName}"`,
+            'success',
+          );
+          setShowModal(false);
+        }
+      } else {
         showToast(
-          `Successfully created Akasha discussion for "${eventName}"`,
-          'success',
+          `Please connect to Akasha to create a discussion for "${eventName}"`,
+          'error',
         );
-        setShowModal(false);
       }
     } catch (error) {
       console.error('Error creating discussion:', error);

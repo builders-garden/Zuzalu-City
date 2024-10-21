@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 
 import {
-  AkashaReadableImageBlockContent,
   getReadableReflectionsByReflectionId,
   standardDateFormat,
   ZulandReadableReflection,
@@ -39,10 +38,12 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
         return await getReadableReflectionsByReflectionId(reflection.id);
       } catch (error) {
         console.error('Error getting child reflections:', error);
-        return undefined;
+        return {
+          pageInfo: null,
+          edge: [],
+        };
       }
     },
-    enabled: !!reflection.id,
   });
 
   const handleReplyClick = () => {
@@ -106,10 +107,9 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                   <Image
                     key={key}
                     src={block.value.images[0].src}
-                    alt={
-                      (block.value as AkashaReadableImageBlockContent)
-                        .caption ?? ''
-                    }
+                    alt={block.value.caption ?? ''}
+                    width={block.value.images[0].size.width}
+                    height={block.value.images[0].size.height}
                   />
                 )
               );
@@ -167,7 +167,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                 />
                 <CommentDetails
                   reflection={childReflection.node}
-                  onReplySubmit={onReplySubmit}
+                  onReplySubmit={handleReplySubmit}
                 />
               </Stack>
             ))}

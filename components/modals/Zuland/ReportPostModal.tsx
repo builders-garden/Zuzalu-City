@@ -83,7 +83,11 @@ const ReportPostModal = ({
               label={reason}
               onClick={() => handleReasonSelect(reason)}
               color={selectedReason === reason ? 'primary' : 'secondary'}
-              sx={{ m: 0.5 }}
+              sx={{
+                m: 0.5,
+                backgroundColor:
+                  selectedReason === reason ? ' rgb(238, 75, 43)' : '',
+              }}
             />
           ))}
         </Box>
@@ -115,9 +119,9 @@ const ReportPostModal = ({
             disabled={!selectedReason}
             onClick={handleReportUser}
             sx={{
-              color: 'white',
+              color: ' rgb(238, 75, 43)',
               borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(238, 75, 43, 0.2)',
               padding: '4px 20px',
               fontSize: '14px',
               fontWeight: '700',
