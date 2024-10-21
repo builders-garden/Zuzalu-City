@@ -16,6 +16,7 @@ import ReplyForm from './ReplyForm';
 import { ChatBubbleIcon } from '@/components/icons';
 
 interface CommentDetailsProps {
+  eventId: string;
   reflection: ZulandReadableReflection;
   onReplySubmit: (
     content: string,
@@ -25,6 +26,7 @@ interface CommentDetailsProps {
 }
 
 const CommentDetails: React.FC<CommentDetailsProps> = ({
+  eventId,
   reflection,
   onReplySubmit,
 }) => {
@@ -140,6 +142,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
         {showReplyForm && (
           <div>
             <ReplyForm
+              eventId={eventId}
               onCancel={() => setShowReplyForm(false)}
               onReplySubmit={handleReplySubmit}
               replyingTo={reflection.author.akashaProfile.name}
@@ -166,6 +169,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                   color="#D7FFC4"
                 />
                 <CommentDetails
+                  eventId={eventId}
                   reflection={childReflection.node}
                   onReplySubmit={handleReplySubmit}
                 />

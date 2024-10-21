@@ -169,7 +169,7 @@ export type ZulandProfileInput = {
   };
   description?: string;
   name: string;
-  links?: Array<{ href: string; url: string }>;
+  links?: Array<{ href: string; label: string | null }>;
 };
 
 export type ZulandCreateAppInput = {

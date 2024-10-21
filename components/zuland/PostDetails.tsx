@@ -291,6 +291,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
         {showReplyForm && (
           <div>
             <ReplyForm
+              eventId={eventId}
               onCancel={() => setShowReplyForm(false)}
               onReplySubmit={handleReplySubmit}
             />
@@ -339,6 +340,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
         <Stack spacing={3}>
           {reflections.map((reflection) => (
             <CommentDetails
+              eventId={eventId}
               key={reflection.id}
               reflection={reflection}
               onReplySubmit={handleReplySubmit}

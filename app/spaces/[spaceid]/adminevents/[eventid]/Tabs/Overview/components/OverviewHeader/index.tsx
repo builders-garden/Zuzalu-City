@@ -15,7 +15,7 @@ import { useParams } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
 import { QRReader } from '@/components/modals/QRScanModal/QRReader';
 import { supabase } from '@/utils/supabase/client';
-import CreateDiscussionModal from '@/components/modals/CreateDiscussionModal';
+import CreateDiscussionModal from '@/components/modals/Zuland/CreateDiscussionModal';
 
 interface PropTypes {
   event?: Event;

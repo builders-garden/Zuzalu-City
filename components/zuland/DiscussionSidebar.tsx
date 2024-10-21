@@ -143,7 +143,7 @@ const DiscussionSidebar = ({ discussion, handleClose }: SidebarProps) => {
   );
 };
 
-const getIconFromLink = (link: string) => {
+export const getIconFromLink = (link: string) => {
   if (
     link.startsWith('https://x.com/') ||
     link.startsWith('https://twitter.com/')
@@ -162,7 +162,7 @@ const getIconFromLink = (link: string) => {
   if (link.startsWith('https://warpcast.com/')) {
     return <FarcasterIcon width="20px" height="20px" />;
   }
-  return <ChainIcon width="20px" height="20px" />;
+  return <ChainIcon width="20px" height="20px" color="white" />;
 };
 
 export default DiscussionSidebar;

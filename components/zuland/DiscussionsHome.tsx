@@ -18,7 +18,7 @@ import { PlusCircleIcon } from '@/components/icons';
 import Container from '@/components/zuland/Container';
 import SortList from '@/components/zuland/SortList';
 import PostCard from '@/components/zuland/PostCard';
-import AkashaConnectModal from '@/components/modals/AkashaConnectModal';
+import AkashaConnectModal from '@/components/modals/Zuland/AkashaConnectModal';
 import TopicList from '@/components/zuland/TopicList';
 import { Post } from '@/utils/akasha/beam-to-markdown';
 

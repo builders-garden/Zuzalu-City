@@ -1,8 +1,13 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Typography, TextField, Stack, InputAdornment } from '@mui/material';
+
 import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
 import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+
+import { Typography, TextField, Stack, InputAdornment } from '@mui/material';
 import { ZuButton } from '@/components/core';
+import AkashaCreateProfileModal from '@/components/modals/Zuland/AkashaCreateProfileModal';
 import TopicList from './TopicList';
 
 interface NewPostProps {
@@ -98,82 +103,85 @@ const NewPost: React.FC<NewPostProps> = ({
   }
 
   return (
-    <Stack spacing={3}>
-      <Typography variant="h4">Create a new post</Typography>
-      <Stack spacing={1}>
-        <Typography variant="body1">Title</Typography>
-        <TextField
-          fullWidth
-          label="Title"
-          variant="outlined"
-          value={title}
-          onChange={handleTitleChange}
-          inputProps={{
-            maxLength: MAX_TITLE_LENGTH,
-          }}
-          helperText={`${MAX_TITLE_LENGTH - title.length} characters remaining`}
-          FormHelperTextProps={{
-            sx: { textAlign: 'right' },
-          }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                {title.length}/{MAX_TITLE_LENGTH}
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Stack>
+    <>
+      <Stack spacing={3}>
+        <Typography variant="h4">Create a new post</Typography>
+        <Stack spacing={1}>
+          <Typography variant="body1">Title</Typography>
+          <TextField
+            fullWidth
+            label="Title"
+            variant="outlined"
+            value={title}
+            onChange={handleTitleChange}
+            inputProps={{
+              maxLength: MAX_TITLE_LENGTH,
+            }}
+            helperText={`${MAX_TITLE_LENGTH - title.length} characters remaining`}
+            FormHelperTextProps={{
+              sx: { textAlign: 'right' },
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  {title.length}/{MAX_TITLE_LENGTH}
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Stack>
 
-      <TopicList
-        selectedTopics={selectedTopics}
-        setSelectedTopics={setSelectedTopics}
-      />
-
-      <Stack spacing={1}>
-        <Typography variant="body1">Compose your post</Typography>
-        <TextField
-          fullWidth
-          label="Content"
-          variant="outlined"
-          multiline
-          rows={6}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          inputProps={{
-            maxLength: MAX_CONTENT_LENGTH,
-          }}
-          helperText={`${MAX_CONTENT_LENGTH - content.length} characters remaining`}
-          FormHelperTextProps={{
-            sx: { textAlign: 'right' },
-          }}
+        <TopicList
+          selectedTopics={selectedTopics}
+          setSelectedTopics={setSelectedTopics}
         />
+
+        <Stack spacing={1}>
+          <Typography variant="body1">Compose your post</Typography>
+          <TextField
+            fullWidth
+            label="Content"
+            variant="outlined"
+            multiline
+            rows={6}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            inputProps={{
+              maxLength: MAX_CONTENT_LENGTH,
+            }}
+            helperText={`${MAX_CONTENT_LENGTH - content.length} characters remaining`}
+            FormHelperTextProps={{
+              sx: { textAlign: 'right' },
+            }}
+          />
+        </Stack>
+        <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <ZuButton onClick={onCancel}>Cancel</ZuButton>
+          <ZuButton
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={!title || !content}
+            sx={{
+              color: '#D7FFC4',
+              backgroundColor: 'rgba(215, 255, 196, 0.2)',
+              borderRadius: '10px',
+              border: '1px solid rgba(215, 255, 196, 0.2)',
+              padding: '4px 20px',
+              fontSize: '14px',
+              fontWeight: '700',
+              gap: '10px',
+              '& > span': {
+                margin: '0px',
+              },
+            }}
+          >
+            Post
+          </ZuButton>
+        </Stack>
       </Stack>
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <ZuButton onClick={onCancel}>Cancel</ZuButton>
-        <ZuButton
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit}
-          disabled={!title || !content}
-          sx={{
-            color: '#D7FFC4',
-            backgroundColor: 'rgba(215, 255, 196, 0.2)',
-            borderRadius: '10px',
-            border: '1px solid rgba(215, 255, 196, 0.2)',
-            padding: '4px 20px',
-            fontSize: '14px',
-            fontWeight: '700',
-            gap: '10px',
-            '& > span': {
-              margin: '0px',
-            },
-          }}
-        >
-          Post
-        </ZuButton>
-      </Stack>
-    </Stack>
+      <AkashaCreateProfileModal eventId={eventId} />
+    </>
   );
 };
 
