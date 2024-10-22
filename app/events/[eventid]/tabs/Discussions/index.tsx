@@ -12,6 +12,7 @@ import NewPost from '@/components/zuland/NewPost';
 import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
 import Container from '@/components/zuland/Container';
+import ZuAuthManager from './ZuAuthManager';
 
 interface DiscussionsProps {
   eventId: string;
@@ -101,6 +102,9 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
       bgcolor="#222222"
       width="100%"
     >
+      <Container>
+        <ZuAuthManager />
+      </Container>
       {postId && selectedPost ? (
         <Container>
           <DiscussionDetails discussion={selectedPost} postId={postId} />

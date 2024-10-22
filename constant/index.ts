@@ -188,14 +188,25 @@ export const ironOptions = {
 };
 
 export const Zuconfig: PipelineEdDSATicketZuAuthConfig[] = [
+  // {
+  //   pcdType: EdDSATicketPCDTypeName,
+  //   publicKey: [
+  //     '1ebfb986fbac5113f8e2c72286fe9362f8e7d211dbc68227a468d7b919e75003',
+  //     '10ec38f11baacad5535525bbe8e343074a483c051aa1616266f3b1df3fb7d204',
+  //   ] as EdDSAPublicKey,
+  //   eventId: '6f5f194b-97b5-5fe9-994d-0998f3eacc75',
+  //   eventName: 'ZuVillage Georgia',
+  // },
   {
-    pcdType: EdDSATicketPCDTypeName,
+    pcdType: 'eddsa-ticket-pcd',
     publicKey: [
       '1ebfb986fbac5113f8e2c72286fe9362f8e7d211dbc68227a468d7b919e75003',
       '10ec38f11baacad5535525bbe8e343074a483c051aa1616266f3b1df3fb7d204',
-    ] as EdDSAPublicKey,
-    eventId: '6f5f194b-97b5-5fe9-994d-0998f3eacc75',
-    eventName: 'ZuVillage Georgia',
+    ],
+    productId: 'f4cbd4c9-819e-55eb-8c68-90a660bacf49',
+    eventId: '3cf75131-6631-5096-b2e8-03c25d00f4de',
+    eventName: 'Example Ticket',
+    productName: 'EdDSA',
   },
 ];
 
