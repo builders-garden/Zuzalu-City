@@ -14,12 +14,15 @@ import { ZuButton } from '@/components/core';
 
 import ReplyForm from './ReplyForm';
 import { ChatBubbleIcon } from '@/components/icons';
+import { buildIpfsUrl } from '@/utils/akasha/beam-to-post';
+import ReadOnlyEditor from './ReadOnlyEditor';
+import { IPublishData } from '@akashaorg/typings/lib/ui';
 
 interface CommentDetailsProps {
   eventId: string;
   reflection: ZulandReadableReflection;
   onReplySubmit: (
-    content: string,
+    content: IPublishData[],
     topics: string[],
     parentReflectionId?: string,
   ) => void;
@@ -58,8 +61,12 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
     }, 0);
   };
 
-  const handleReplySubmit = (content: string, topics: string[]) => {
-    onReplySubmit(content, topics, reflection.id);
+  const handleReplySubmit = (
+    content: IPublishData[],
+    topics: string[],
+    parentReflectionId?: string,
+  ) => {
+    onReplySubmit(content, topics, parentReflectionId ?? reflection.id);
     setShowReplyForm(false);
   };
 
@@ -85,30 +92,35 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
           switch (block.propertyType) {
             case 'slate-block':
               return (
-                <Typography key={key} variant="body1">
-                  {typeof block.value !== 'string' &&
-                    block.value.map((child, index) => (
-                      <span key={index}>
-                        {child.children.map((text, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              fontStyle: text.italic ? 'italic' : 'normal',
-                            }}
-                          >
-                            {text.text}
-                          </span>
-                        ))}
-                      </span>
-                    ))}
-                </Typography>
+                <>
+                  {typeof block.value === 'string' ? (
+                    <Typography key={key} variant="body1">
+                      {block.value}
+                    </Typography>
+                  ) : (
+                    <Box
+                      sx={{
+                        padding: '0px 25px',
+                        minHeight: '55px',
+                        color: 'grey.500',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: '6',
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {block.value && <ReadOnlyEditor content={block.value} />}
+                    </Box>
+                  )}
+                </>
               );
             case 'image-block':
               return (
                 typeof block.value !== 'string' && (
                   <Image
                     key={key}
-                    src={block.value.images[0].src}
+                    src={buildIpfsUrl(block.value.images[0].src)}
                     alt={block.value.caption ?? ''}
                     width={block.value.images[0].size.width}
                     height={block.value.images[0].size.height}
@@ -171,7 +183,9 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                 <CommentDetails
                   eventId={eventId}
                   reflection={childReflection.node}
-                  onReplySubmit={handleReplySubmit}
+                  onReplySubmit={(content, topics) =>
+                    handleReplySubmit(content, topics, childReflection.node.id)
+                  }
                 />
               </Stack>
             ))}

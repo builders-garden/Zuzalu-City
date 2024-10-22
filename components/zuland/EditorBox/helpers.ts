@@ -17,7 +17,6 @@ import {
   MentionElement,
 } from '@akashaorg/typings/lib/ui';
 import { Profile } from '@akashaorg/typings/lib/ui';
-import { ExtendedNode } from '.';
 
 export const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 export const TEXT_ALIGN_TYPES = ['left', 'center', 'right'];

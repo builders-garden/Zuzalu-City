@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import { Typography, TextField, Stack } from '@mui/material';
+import { Typography, Stack } from '@mui/material';
 import { ZuButton } from '@/components/core';
 
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 import AkashaCreateProfileModal from '../modals/Zuland/AkashaCreateProfileModal';
+import SlateEditorBlock, { SlateEditorBlockRef } from './SlateEditorBlock';
+import { IPublishData } from '@akashaorg/typings/lib/ui';
 
 interface ReplyFormProps {
   eventId: string;
   onCancel: () => void;
   onReplySubmit: (
-    content: string,
+    content: IPublishData[],
     topics: string[],
     parentReflectionId?: string,
   ) => void;
@@ -23,8 +25,9 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   onReplySubmit,
   replyingTo,
 }) => {
+  const editorBlockRef = useRef<SlateEditorBlockRef>(null);
+  const { currentAkashaUserStats } = useAkashaAuthStore();
   const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
-  const [content, setContent] = useState('');
 
   useEffect(() => {
     if (!currentAkashaUser) {
@@ -34,8 +37,8 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   }, [currentAkashaUser]);
 
   const handleSubmit = () => {
-    onReplySubmit(content, []);
-    setContent('');
+    const editorsContent = editorBlockRef.current?.getAllContents() || [];
+    onReplySubmit(editorsContent, []);
   };
 
   return (
@@ -46,16 +49,12 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
         </Typography>
         <Stack spacing={1}>
           <Typography variant="body1">Compose your reply</Typography>
-          <TextField
-            fullWidth
-            label="Body"
-            variant="outlined"
-            multiline
-            rows={6}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your reply here..."
-          />
+          {currentAkashaUserStats?.akashaProfile?.did ? (
+            <SlateEditorBlock
+              authenticatedDID={currentAkashaUserStats.akashaProfile.did.id}
+              ref={editorBlockRef}
+            />
+          ) : null}
         </Stack>
         <Stack direction="row" spacing={2} justifyContent="flex-end">
           <ZuButton
@@ -77,7 +76,6 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
           </ZuButton>
           <ZuButton
             onClick={handleSubmit}
-            disabled={!content}
             sx={{
               color: '#D7FFC4',
               backgroundColor: 'rgba(215, 255, 196, 0.2)',

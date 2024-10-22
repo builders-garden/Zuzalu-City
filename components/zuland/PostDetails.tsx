@@ -40,6 +40,7 @@ import {
   ArrowUpOnSquareIcon,
 } from '@/components/icons';
 import ReadOnlyEditor from './ReadOnlyEditor';
+import { IPublishData } from '@akashaorg/typings/lib/ui';
 
 interface PostDetailsProps {
   postId: string;
@@ -131,11 +132,17 @@ const PostDetails: React.FC<PostDetailsProps> = ({
   };
 
   const handleReplySubmit = async (
-    content: string,
+    editorContents: IPublishData[],
     topics: string[],
     parentReflectionId: string = '',
   ) => {
     setShowReplyForm(false);
+    const blocks = editorContents.map((content, index) => ({
+      label: `@bg/zuland/reflection-${index + 1}`,
+      propertyType: 'slate-block',
+      value: encodeSlateToBase64(content.slateContent),
+    }));
+    console.log({ parentReflectionId, topics, editorContents });
 
     try {
       await createReflection({
@@ -145,22 +152,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
         tags: topics,
         isReply: parentReflectionId !== '' ? true : null,
         reflection: parentReflectionId !== '' ? parentReflectionId : null,
-        content: [
-          {
-            label: '@bg/zuland/reflection',
-            propertyType: 'slate-block',
-            value: encodeSlateToBase64([
-              {
-                type: 'paragraph',
-                children: [
-                  {
-                    text: content,
-                  },
-                ],
-              },
-            ]),
-          },
-        ],
+        content: [...blocks],
       });
 
       // Invalidate queries
