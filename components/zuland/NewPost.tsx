@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
-import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
-import { AkashaContentBlockBlockDef } from '@akashaorg/typings/lib/sdk/graphql-types-new';
+import {
+  createZulandBeamFromBlocks,
+  encodeSlateToBase64,
+} from '@/utils/akasha';
 
 import { Typography, TextField, Stack, InputAdornment } from '@mui/material';
 import { ZuButton } from '@/components/core';
@@ -57,12 +59,10 @@ const NewPost: React.FC<NewPostProps> = ({
       throw new Error('Beam title and content are required');
     }
     try {
-      await createBeamFromBlocks({
+      await createZulandBeamFromBlocks({
         eventId,
-        active: true,
         blocks: [
           {
-            active: true,
             content: [
               {
                 label: 'beam-title',
@@ -93,11 +93,6 @@ const NewPost: React.FC<NewPostProps> = ({
                 ]),
               },
             ],
-            createdAt: new Date().toISOString(),
-            kind: AkashaContentBlockBlockDef.Text,
-            nsfw: false,
-            appVersionID:
-              'k2t6wzhkhabz6lner6bf752deto2nuous4374g4powmfyn14vg36fkaymc9sbv',
           },
         ],
         tags: selectedTopics.map((topic) => ({

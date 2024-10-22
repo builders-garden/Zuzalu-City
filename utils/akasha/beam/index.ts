@@ -3,6 +3,7 @@ import {
   AkashaBeamFiltersInput,
   AkashaBeamInput,
   AkashaBeamSortingInput,
+  AkashaContentBlockBlockDef,
   AkashaContentBlockInput,
   BeamLabeledInput,
   SortOrder,
@@ -11,11 +12,17 @@ import akashaSdk from '../akasha';
 import {
   AkashaPageInfo,
   BeamsByAuthorDid,
+  ZulandContentBlockInput,
   ZulandReadableBeam,
 } from '../akasha.d';
-import { extractBeamReadableContent } from './utils';
+import {
+  extractBeamReadableContent,
+  extractDecryptedBeamReadableContent,
+} from './utils';
 import { getAppByEventId } from '../app';
 import { createBlockContent } from '../block';
+import { ZulandLit } from '@/utils/lit';
+import { AccessControlCondition } from '@/utils/lit/types';
 
 const DEFAULT_BEAMS_TAKE = 10;
 
@@ -95,6 +102,10 @@ export async function createBeam(beam: AkashaBeamInput) {
   return createAkashaBeamResponse?.createAkashaBeam ?? null;
 }
 
+/**
+ * @deprecated use createZulandBeamFromBlocks instead
+ * @returns the created beam
+ */
 export async function createBeamFromBlocks(params: {
   eventId: string;
   active: boolean;
@@ -136,6 +147,109 @@ export async function createBeamFromBlocks(params: {
   };
   const beam = await createBeam(beamToCreate);
   console.log('Beam created');
+  return beam;
+}
+
+export async function createBeamFromPlainBlocks(params: {
+  appId: string;
+  appVersionId: string;
+  active: boolean;
+  blocks: AkashaContentBlockInput[];
+  tags?: Array<BeamLabeledInput>;
+}) {
+  // step 1: create the blocks
+  console.log('creating blocks before Beam creation...');
+  const blockCreationResults = await Promise.all(
+    params.blocks.map(createBlockContent),
+  );
+  console.log("Beam's blocks created");
+
+  // step 2: create the beam
+  const beamContent = blockCreationResults.map((block, index) => ({
+    blockID: block?.document?.id,
+    order: index,
+  }));
+  console.log('Creating beam...');
+  const beamToCreate: AkashaBeamInput = {
+    active: params.active,
+    appID: params.appId,
+    appVersionID: params.appVersionId,
+    createdAt: new Date().toISOString(),
+    content: beamContent,
+    tags: params.tags,
+  };
+  const beam = await createBeam(beamToCreate);
+  console.log('Beam created');
+  return beam;
+}
+
+export async function createZulandBeamFromBlocks(params: {
+  eventId: string;
+  active?: boolean;
+  blocks: ZulandContentBlockInput[];
+  tags?: Array<BeamLabeledInput>;
+}) {
+  // step 0: retrieve the app and app version ID from the event ID
+  const app = await getAppByEventId(params.eventId);
+  if (!app) {
+    throw new Error('App not found');
+  }
+  // the fisrt release is the latest one (they are ordered by createdAt)
+  const appVersion = app.releases?.edges?.[0]?.node;
+  if (!appVersion) {
+    throw new Error(
+      'App version not found. An app version is required to create a beam',
+    );
+  }
+
+  const ticketRequirements =
+    appVersion?.meta?.find((meta) => meta?.property === 'TEXT#ENCRYPTED') ??
+    null;
+
+  const standardizedBlocks: AkashaContentBlockInput[] = await Promise.all(
+    params.blocks.map(async (block) => {
+      let encryptedBlockContent = block.content;
+      if (ticketRequirements) {
+        // encrypt blocks content here
+        console.log('Encrypting blocks content...');
+        try {
+          const litACC: AccessControlCondition = JSON.parse(
+            ticketRequirements.value,
+          );
+          const zulandLit = new ZulandLit(litACC.chain);
+          encryptedBlockContent = await Promise.all(
+            encryptedBlockContent.map(async (blockContent) => {
+              return {
+                ...blockContent,
+                value: JSON.stringify(
+                  await zulandLit.encryptString(blockContent.value, [litACC]),
+                ),
+              };
+            }),
+          );
+        } catch (error) {
+          console.error('Error encrypting blocks content', error);
+          throw new Error('Error encrypting blocks content');
+        }
+      }
+      return {
+        active: block.active ?? true,
+        createdAt: block.createdAt ?? new Date().toISOString(),
+        kind: block.kind ?? AkashaContentBlockBlockDef.Text,
+        nsfw: block.nsfw ?? false,
+        appVersionID: appVersion.id,
+        content: encryptedBlockContent,
+      };
+    }),
+  );
+
+  const beam = await createBeamFromPlainBlocks({
+    appId: app.id,
+    appVersionId: appVersion.id,
+    active: params.active ?? true,
+    blocks: standardizedBlocks,
+    tags: params.tags,
+  });
   return beam;
 }
 
@@ -181,6 +295,64 @@ export async function getReadableBeams(options?: {
   };
 }
 
+export async function getReadableBeamsFromAppRelease(
+  appReleases: {
+    id: string;
+    createdAt: any;
+    source: any;
+    version: string;
+    meta?: Array<{
+      property: string;
+      provider: string;
+      value: string;
+    } | null> | null;
+  }[],
+  options?: {
+    before?: string;
+    after?: string;
+    first?: number;
+    last?: number;
+    filters?: AkashaBeamFiltersInput;
+    sorting?: AkashaBeamSortingInput;
+  },
+): Promise<{
+  edges: Array<{ cursor: string | undefined; node: ZulandReadableBeam }>;
+  pageInfo: AkashaPageInfo;
+}> {
+  const beams = await getBeams(options);
+  if (!beams || !beams.edges) {
+    return {
+      edges: [],
+      pageInfo: {
+        startCursor: null,
+        endCursor: null,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+  return {
+    edges: await Promise.all(
+      beams.edges.map(async (edge) => {
+        // check here if the beam needs to be decrypted
+        try {
+          return {
+            cursor: edge?.cursor,
+            node: await extractDecryptedBeamReadableContent(
+              edge?.node as AkashaBeam,
+              appReleases,
+            ),
+          };
+        } catch (error) {
+          console.error('Error decrypting beam', error);
+          throw new Error('Error decrypting beam');
+        }
+      }),
+    ),
+    pageInfo: beams.pageInfo,
+  };
+}
+
 export async function getZulandReadableBeams(
   eventId: string,
   options?: {
@@ -199,17 +371,26 @@ export async function getZulandReadableBeams(
   if (!zulandApp) {
     throw new Error('App not found');
   }
-  const appID = zulandApp.id;
-  const readableBeams = await getReadableBeams({
-    filters: {
-      where: {
-        appID: {
-          equalTo: appID,
+
+  // retrieve all app versions
+  const appVersions =
+    zulandApp.releases?.edges
+      ?.map((edge) => edge?.node ?? null)
+      .filter((newEdge) => newEdge != null) ?? null;
+
+  const readableBeams = await getReadableBeamsFromAppRelease(
+    appVersions ?? [],
+    {
+      filters: {
+        where: {
+          appID: {
+            equalTo: zulandApp.id,
+          },
         },
       },
+      ...options,
     },
-    ...options,
-  });
+  );
   return readableBeams;
 }
 
