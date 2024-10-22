@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 import { createBeamFromBlocks, encodeSlateToBase64 } from '@/utils/akasha';
@@ -10,6 +10,8 @@ import { Typography, TextField, Stack, InputAdornment } from '@mui/material';
 import { ZuButton } from '@/components/core';
 import AkashaCreateProfileModal from '@/components/modals/Zuland/AkashaCreateProfileModal';
 import TopicList from './TopicList';
+import SlateEditorBlock, { SlateEditorBlockRef } from './SlateEditorBlock';
+import { IPublishData } from '@akashaorg/typings/lib/ui';
 
 interface NewPostProps {
   eventId: string;
@@ -27,11 +29,11 @@ const NewPost: React.FC<NewPostProps> = ({
   const [reopenCreateProfileModal, setReopenCreateProfileModal] =
     useState(false);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const MAX_TITLE_LENGTH = 300;
-  const MAX_CONTENT_LENGTH = 10000;
+
+  const editorBlockRef = useRef<SlateEditorBlockRef>(null);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value.slice(0, MAX_TITLE_LENGTH);
@@ -44,7 +46,8 @@ const NewPost: React.FC<NewPostProps> = ({
       return;
     }
     try {
-      await createBeamPassingBlocks();
+      const editorsContent = editorBlockRef.current?.getAllContents() || [];
+      await createBeamPassingBlocks(editorsContent);
       onPostCreated();
     } catch (error) {
       console.error('Error creating beam', error);
@@ -52,11 +55,17 @@ const NewPost: React.FC<NewPostProps> = ({
     }
   };
 
-  async function createBeamPassingBlocks() {
-    if (!title || !content) {
+  async function createBeamPassingBlocks(editorContents: IPublishData[]) {
+    if (!title || editorContents.length === 0) {
       throw new Error('Beam title and content are required');
     }
     try {
+      const blocks = editorContents.map((content, index) => ({
+        label: `beam-content-${index + 1}`,
+        propertyType: 'slate-block',
+        value: encodeSlateToBase64(content.slateContent),
+      }));
+
       await createBeamFromBlocks({
         eventId,
         active: true,
@@ -78,20 +87,7 @@ const NewPost: React.FC<NewPostProps> = ({
                   },
                 ]),
               },
-              {
-                label: 'beam-content',
-                propertyType: 'slate-block',
-                value: encodeSlateToBase64([
-                  {
-                    type: 'paragraph',
-                    children: [
-                      {
-                        text: content,
-                      },
-                    ],
-                  },
-                ]),
-              },
+              ...blocks,
             ],
             createdAt: new Date().toISOString(),
             kind: AkashaContentBlockBlockDef.Text,
@@ -147,22 +143,12 @@ const NewPost: React.FC<NewPostProps> = ({
 
         <Stack spacing={1}>
           <Typography variant="body1">Compose your post</Typography>
-          <TextField
-            fullWidth
-            label="Content"
-            variant="outlined"
-            multiline
-            rows={6}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            inputProps={{
-              maxLength: MAX_CONTENT_LENGTH,
-            }}
-            helperText={`${MAX_CONTENT_LENGTH - content.length} characters remaining`}
-            FormHelperTextProps={{
-              sx: { textAlign: 'right' },
-            }}
-          />
+          {currentAkashaUserStats?.akashaProfile?.did ? (
+            <SlateEditorBlock
+              authenticatedDID={currentAkashaUserStats.akashaProfile.did.id}
+              ref={editorBlockRef}
+            />
+          ) : null}
         </Stack>
         <Stack direction="row" spacing={2} justifyContent="flex-end">
           <ZuButton onClick={onCancel}>Cancel</ZuButton>
@@ -170,7 +156,7 @@ const NewPost: React.FC<NewPostProps> = ({
             variant="contained"
             color="primary"
             onClick={handleSubmit}
-            disabled={!title || !content}
+            disabled={!title}
             sx={{
               color: '#D7FFC4',
               backgroundColor: 'rgba(215, 255, 196, 0.2)',

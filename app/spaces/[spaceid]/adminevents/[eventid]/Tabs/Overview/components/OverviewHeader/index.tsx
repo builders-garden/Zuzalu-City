@@ -1,12 +1,5 @@
 import * as React from 'react';
-import {
-  Stack,
-  Typography,
-  useTheme,
-  Snackbar,
-  Alert,
-  SnackbarCloseReason,
-} from '@mui/material';
+import { Stack, Typography, useTheme, Snackbar, Alert } from '@mui/material';
 import OverviewButton from './OverviewButton';
 import { Event } from '@/types';
 import { Anchor, ProfileEdge, Profile } from '@/types';

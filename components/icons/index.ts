@@ -92,6 +92,7 @@ import FarcasterIcon from './Farcaster';
 import DiscordIcon from './Discord';
 import TelegramIcon from './Telegram';
 import ChainIcon from './Chain';
+import { TrashcanIcon } from './Trashcan';
 
 export {
   HomeIcon,
@@ -188,4 +189,5 @@ export {
   DiscordIcon,
   TelegramIcon,
   ChainIcon,
+  TrashcanIcon,
 };
