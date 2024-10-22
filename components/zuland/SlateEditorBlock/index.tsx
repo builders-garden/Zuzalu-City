@@ -5,6 +5,7 @@ import React, {
   useState,
   useImperativeHandle,
   forwardRef,
+  useRef,
 } from 'react';
 import EditorBox, { EditorActions } from '@/components/zuland/EditorBox';
 import { type IPublishData } from '@akashaorg/typings/lib/ui';
@@ -25,6 +26,8 @@ export const SlateEditorBlock = forwardRef<
   SlateEditorBlockRef,
   SlateEditorBlockProps
 >(({ authenticatedDID }, ref) => {
+  const editorBlockRef = useRef<EditorActions[]>([]);
+
   const [editors, setEditors] = useState<
     {
       key: number;
@@ -59,10 +62,11 @@ export const SlateEditorBlock = forwardRef<
     ref,
     () => ({
       getAllContents: () => {
-        console.log('getAllContents', editors);
-        return editors.map(
-          (editor) => editor.ref.current?.getContent() ?? ({} as IPublishData),
-        );
+        return editors
+          .map((_, index) => {
+            return editorBlockRef.current[index]?.getContent() ?? null;
+          })
+          .filter((content) => content !== null);
       },
     }),
     [editors],
@@ -88,6 +92,11 @@ export const SlateEditorBlock = forwardRef<
             handleDisablePublish={() => false}
             encodingFunction={encodeSlateToBase64}
             onPublish={onPublish}
+            ref={(el) => {
+              if (el) {
+                editorBlockRef.current[index] = el;
+              }
+            }}
           />
           {index > 0 && (
             <Stack alignItems="flex-end" width="100%">

@@ -1,10 +1,10 @@
 import { BlockLabeledValue } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import {
   AkashaReadableImageBlockContent,
-  AkashaReadableSlateBlockContent,
   ZulandReadableBlockContent,
 } from '../akasha.d';
 import { decodeb64SlateContent } from '../akasha-utils';
+import { Descendant } from 'slate';
 
 export function convertBlockContentToReadableBlock(
   block: BlockLabeledValue,
@@ -14,9 +14,7 @@ export function convertBlockContentToReadableBlock(
       return {
         ...block,
         propertyType: 'slate-block',
-        value: decodeb64SlateContent(
-          block.value,
-        ) as AkashaReadableSlateBlockContent[],
+        value: decodeb64SlateContent(block.value) as Descendant[],
       };
     case 'image-block':
       return {

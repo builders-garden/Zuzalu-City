@@ -11,6 +11,7 @@ import {
   BlockLabeledValue,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
+import { Descendant } from 'slate';
 
 export type BeamsByAuthorDid = {
   akashaBeamListCount: number;
@@ -227,17 +228,6 @@ export type ZulandReadableReflection = {
   };
 };
 
-export type AkashaReadableSlateBlockContent = {
-  type: 'paragraph';
-  children: {
-    text: string;
-    align?: string;
-    italic?: boolean;
-    bold?: boolean;
-    // TODO: add here more properties if available
-  }[];
-};
-
 export type AkashaGetReflectionsFromBeamResponse = {
   node: {
     reflectionsCount: number;
@@ -339,7 +329,7 @@ export type ZulandReadableBlockContent =
   | {
       label: string;
       propertyType: 'slate-block';
-      value: AkashaReadableSlateBlockContent[];
+      value: Descendant[];
     }
   | {
       label: string;

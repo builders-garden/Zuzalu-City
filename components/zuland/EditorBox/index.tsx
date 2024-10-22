@@ -173,7 +173,6 @@ const EditorBox = forwardRef<EditorActions, EditorBoxProps>((props, ref) => {
         editor.insertText('\n');
       },
       getContent: () => {
-        console.log('getContent', editor.children);
         const slateContent = editor.children;
 
         const metadata: IMetadata = {
@@ -251,7 +250,6 @@ const EditorBox = forwardRef<EditorActions, EditorBoxProps>((props, ref) => {
    *  handles selection for mentions and tags
    */
   const handleChange = (value: Descendant[]) => {
-    console.log('handleChange', value);
     let textLength = 0;
     let encodedNodeLength = 0;
     /**

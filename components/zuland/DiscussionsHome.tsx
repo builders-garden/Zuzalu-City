@@ -20,7 +20,7 @@ import SortList from '@/components/zuland/SortList';
 import PostCard from '@/components/zuland/PostCard';
 import AkashaConnectModal from '@/components/modals/Zuland/AkashaConnectModal';
 import TopicList from '@/components/zuland/TopicList';
-import { Post } from '@/utils/akasha/beam-to-markdown';
+import { Post } from '@/utils/akasha/beam-to-post';
 
 interface DiscussionsHomeProps {
   eventId: string;

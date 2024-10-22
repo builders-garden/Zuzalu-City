@@ -8,7 +8,7 @@ import {
   XMarkIcon,
   ChainIcon,
 } from '@/components/icons';
-import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-post';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 
 interface SidebarProps {

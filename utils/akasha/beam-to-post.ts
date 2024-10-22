@@ -1,5 +1,6 @@
 import { ZulandReadableBeam, ZulandReadbleBlock } from '@/utils/akasha';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
+import { Descendant } from 'slate';
 
 /**
  * Utility to convert Akasha Beam JSON to Markdown
@@ -7,11 +8,11 @@ import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 export interface Post {
   id: string;
   title: string;
-  body: string;
   author: {
     akashaProfile: AkashaProfile;
     isViewer: boolean;
   };
+  originalContent?: Descendant[];
   tags?: string[];
   createdAt: string;
   applicationID: string;
@@ -31,12 +32,22 @@ export const akashaBeamToMarkdown = (
   const posts: Post[] = [];
 
   for (const beam of beams) {
-    const { title, body } = processBeam(beam);
+    const { title } = processBeam(beam);
     posts.push({
       id: beam.id,
       title: title,
-      body: body,
       author: beam.author,
+      originalContent: beam.content.flatMap((block) =>
+        block.content.flatMap((value) => {
+          if (
+            value.propertyType === 'slate-block' &&
+            typeof value.value === 'object'
+          ) {
+            return value.value;
+          }
+          return [];
+        }),
+      ),
       createdAt: beam.createdAt,
       applicationID: beam.appID,
       eventId: eventId,

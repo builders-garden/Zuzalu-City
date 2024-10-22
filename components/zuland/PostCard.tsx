@@ -1,6 +1,6 @@
 'use client';
 
-import { ChatBubbleIcon, HeartIcon } from '@/components/icons';
+import { ChatBubbleIcon } from '@/components/icons';
 import { ArrowUpOnSquareIcon } from '@/components/icons/ArrowUpOnSquare';
 import {
   Stack,
@@ -16,10 +16,10 @@ import TopicChip from './TopicChip';
 import { CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Link from 'next/link';
-import MarkdownVisualizer from './MarkdownVisualizer';
-import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-post';
 import { useState } from 'react';
 import ShareModal from '@/components/modals/Zuland/ShareModal';
+import ReadOnlyEditor from './ReadOnlyEditor';
 
 const CardContentCustom = styled(CardContent)(({ theme }) => ({
   padding: '10px',
@@ -45,7 +45,7 @@ const PostCard = ({
   eventId,
   id,
   title,
-  body,
+  originalContent,
   author,
   createdAt,
   tags = [],
@@ -117,6 +117,7 @@ const PostCard = ({
 
                   <Box
                     sx={{
+                      padding: '0px 25px',
                       minHeight: '55px',
                       color: 'grey.500',
                       overflow: 'hidden',
@@ -126,7 +127,9 @@ const PostCard = ({
                       WebkitBoxOrient: 'vertical',
                     }}
                   >
-                    <MarkdownVisualizer content={body} isPreview={true} />
+                    {originalContent && (
+                      <ReadOnlyEditor content={originalContent} />
+                    )}
                   </Box>
                 </Stack>
               </Link>

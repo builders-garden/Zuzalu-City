@@ -11,7 +11,7 @@ import PostDetails from '@/components/zuland/PostDetails';
 import NewPost from '@/components/zuland/NewPost';
 
 import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
-import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-markdown';
+import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-post';
 import Container from '@/components/zuland/Container';
 
 interface DiscussionsProps {

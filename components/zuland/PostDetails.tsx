@@ -19,14 +19,13 @@ import Drawer from '@/components/drawer';
 import { ZuButton } from '@/components/core';
 import TopicChip from './TopicChip';
 import CommentDetails from './CommentDetails';
-import MarkdownVisualizer from './MarkdownVisualizer';
 import ReplyForm from './ReplyForm';
 import DiscussionSidebar from './DiscussionSidebar';
 import ReportPostModal from '@/components/modals/Zuland/ReportPostModal';
 import ShareModal from '@/components/modals/Zuland/ShareModal';
 import SortList from './SortList';
 
-import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-markdown';
+import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-post';
 import {
   createReflection,
   encodeSlateToBase64,
@@ -40,6 +39,7 @@ import {
   FlagIcon,
   ArrowUpOnSquareIcon,
 } from '@/components/icons';
+import ReadOnlyEditor from './ReadOnlyEditor';
 
 interface PostDetailsProps {
   postId: string;
@@ -217,8 +217,10 @@ const PostDetails: React.FC<PostDetailsProps> = ({
           </Stack>
         </Stack>
 
-        {/* Markdown Visualizer */}
-        <MarkdownVisualizer content={discussion?.body || ''} />
+        {/* Readonly Slate React Editor */}
+        {discussion?.originalContent && (
+          <ReadOnlyEditor content={discussion.originalContent} />
+        )}
 
         {/* Tags */}
         <Box sx={{ display: 'flex', gap: 1 }}>
