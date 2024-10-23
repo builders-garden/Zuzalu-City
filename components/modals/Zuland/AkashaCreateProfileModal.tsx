@@ -35,7 +35,7 @@ const AkashaCreateProfileModal = ({
   const MAX_LINKS = 5;
 
   const { username } = useCeramicContext();
-  const { currentAkashaUserStats } = useAkashaAuthStore();
+  const { currentAkashaUser, currentAkashaUserStats } = useAkashaAuthStore();
 
   const [openModal, setOpenModal] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -48,7 +48,10 @@ const AkashaCreateProfileModal = ({
   const [resultMessage, setResultMessage] = useState('');
 
   useEffect(() => {
-    if (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile) {
+    if (
+      currentAkashaUser &&
+      (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile)
+    ) {
       setOpenModal(true);
     }
   }, []);

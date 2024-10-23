@@ -24,7 +24,7 @@ const NewPost: React.FC<NewPostProps> = ({
   onCancel,
   onPostCreated,
 }) => {
-  const { currentAkashaUserStats } = useAkashaAuthStore();
+  const { currentAkashaUser, currentAkashaUserStats } = useAkashaAuthStore();
 
   const [reopenCreateProfileModal, setReopenCreateProfileModal] =
     useState(false);
@@ -41,7 +41,10 @@ const NewPost: React.FC<NewPostProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile) {
+    if (
+      currentAkashaUser &&
+      (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile)
+    ) {
       setReopenCreateProfileModal(true);
       return;
     }
