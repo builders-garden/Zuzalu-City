@@ -1,17 +1,25 @@
 'use client';
 
-import { useState, Dispatch, SetStateAction, useEffect } from 'react';
-import { ZuButton, ZuInput } from '@/components/core';
+import { useState, Dispatch, SetStateAction, useEffect, useMemo } from 'react';
+import { ZuButton, ZuInput, ZuSwitch } from '@/components/core';
 import { createApp, createAppRelease, getAppByEventId } from '@/utils/akasha';
 import {
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
+  Select,
   Stack,
   Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { LIT_CHAINS } from '@lit-protocol/constants';
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
+import { isAddress } from 'viem';
 
 interface CreateDiscussionModalProps {
   showModal: boolean;
@@ -35,24 +43,52 @@ export default function CreateDiscussionModal({
 }: CreateDiscussionModalProps) {
   const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
 
+  const [appAlreadyExists, setAppAlreadyExists] = useState<boolean>(false);
   const [displayName, setDisplayName] = useState<string>(eventName);
   const [description, setDescription] = useState<string>(eventDescription);
-  const [appAlreadyExists, setAppAlreadyExists] = useState<boolean>(false);
+
+  // nft gated
+  const [nftGated, setNftGated] = useState<boolean>(false);
+  const [contractAddress, setContractAddress] = useState<string>('');
+  const [chainName, setChainName] = useState<string>('Ethereum');
+  const [functionName, setFunctionName] = useState<string>('balanceOf');
+  // const [functionParams, setFunctionParams] = useState<string>(':userAddress');
+
+  const [comparator, setComparator] = useState<string>('>');
+  const [comparisonValue, setComparisonValue] = useState<string>('0');
+
+  const litSupportedChains = useMemo(() => {
+    return Object.entries(LIT_CHAINS)
+      .filter(([key]) => key !== 'hushedNorthstar')
+      .sort(([keyA], [keyB]) =>
+        keyA.toLowerCase().localeCompare(keyB.toLowerCase()),
+      )
+      .map(([key, chain]) => ({
+        litIdentifier: key,
+        chainName: chain.name,
+        symbol: chain.symbol,
+        chainId: chain.chainId,
+      }));
+  }, []);
+
+  const availableComparators = [
+    { id: 1, value: '>', label: 'Greater Than' },
+    { id: 2, value: '<', label: 'Less Than' },
+    { id: 3, value: '>=', label: 'Greater Than or Equal to' },
+    { id: 4, value: '<=', label: 'Less Than or Equal to' },
+    { id: 5, value: '=', label: 'Equal To' },
+    { id: 6, value: '!=', label: 'Not Equal To' },
+    { id: 7, value: 'contains', label: 'Contains' },
+    { id: 7, value: '!contains', label: 'Not Contains' },
+  ];
 
   useEffect(() => {
     async function checkAppExists() {
       const appAlreadyExists = await getAppByEventId(eventId);
       if (appAlreadyExists) {
-        showToast(
-          `Discussion already exists for "${eventName}", closing...`,
-          'info',
-        );
         setAppAlreadyExists(true);
         setDisplayName(appAlreadyExists.name);
         setDescription(appAlreadyExists.description);
-        setTimeout(() => {
-          setShowModal(false);
-        }, 4000);
       }
     }
     checkAppExists();
@@ -66,6 +102,17 @@ export default function CreateDiscussionModal({
   }, [currentAkashaUser, loginAkasha]);
 
   const handleCreateDiscussion = async () => {
+    if (!contractAddress || !isAddress(contractAddress)) {
+      showToast('Please enter a valid contract address', 'error');
+      return;
+    } else if (!chainName) {
+      showToast('Please select a chain', 'error');
+      return;
+    } else if (!displayName) {
+      showToast('Please enter a display name', 'error');
+      return;
+    }
+
     try {
       const appAlreadyExists = await getAppByEventId(eventId);
       if (appAlreadyExists) {
@@ -147,19 +194,190 @@ export default function CreateDiscussionModal({
           style={{
             color: 'rgba(255, 255, 255, 0.7)',
           }}
+          spacing={2}
         >
-          <Typography fontSize={'18px'}>Display Name</Typography>
-          <ZuInput
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            disabled={appAlreadyExists}
-          />
-          <Typography fontSize={'18px'}>Description</Typography>
-          <ZuInput
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            disabled={appAlreadyExists}
-          />
+          <Stack spacing={1}>
+            <Typography fontSize={'18px'}>Display Name</Typography>
+            <ZuInput
+              value={displayName}
+              onChange={(e) => {
+                if (!appAlreadyExists) {
+                  setDisplayName(e.target.value);
+                }
+              }}
+              disabled={appAlreadyExists}
+            />
+          </Stack>
+          <Stack spacing={1}>
+            <Typography fontSize={'18px'}>Description</Typography>
+            <ZuInput
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Stack>
+          <Stack spacing={1}>
+            <Typography fontSize={'18px'}>Event NFT Gated?</Typography>
+            <ZuSwitch
+              checked={nftGated}
+              onChange={() => setNftGated((v) => !v)}
+            />
+          </Stack>
+          {nftGated ? (
+            <>
+              <Stack spacing={0}>
+                <Typography variant="body2">
+                  We support NFT contracts following OpenZeppelin ERC721
+                  standard.
+                </Typography>
+                <Typography variant="body2">
+                  We check if balanceOf(userAddress) &#x3e; 0.
+                </Typography>
+              </Stack>
+              <Stack spacing={1}>
+                <Typography fontSize={'18px'}>Contract Address</Typography>
+                <ZuInput
+                  value={contractAddress}
+                  placeholder="0x..."
+                  onChange={(e) => setContractAddress(e.target.value)}
+                />
+              </Stack>
+              <Stack spacing={1}>
+                <Typography fontSize={'18px'}>Contract Chain</Typography>
+                <Select
+                  value={chainName}
+                  placeholder="Select Lit Compatible Chain"
+                  onChange={(e) => setChainName(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        backgroundColor: '#222222',
+                      },
+                    },
+                  }}
+                >
+                  {litSupportedChains &&
+                    litSupportedChains.map((chain) => (
+                      <MenuItem
+                        key={chain.litIdentifier}
+                        value={chain.chainName}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: '#333333',
+                          },
+                        }}
+                      >
+                        {chain.chainName}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </Stack>
+              {/*
+              <Accordion
+                sx={{
+                  backgroundColor: '#222222',
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls="panel1a-content"
+                  id="panel1a-header"
+                  style={{ marginTop: '10px' }}
+                >
+                  <Typography>Advanced Settings</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={2}>
+                    <Stack spacing={1}>
+                      <Typography fontSize={'18px'}>Function Name</Typography>
+                      <ZuInput
+                        value={functionName}
+                        placeholder="functionName"
+                        onChange={(e) => setFunctionName(e.target.value)}
+                      />
+                    </Stack>
+                     <Stack spacing={1}>
+                      <Typography fontSize={'18px'}>Function Params</Typography>
+                      <ZuInput
+                        value={functionParams}
+                        placeholder="functionParams"
+                        onChange={(e) => setFunctionParams(e.target.value)}
+                      />
+                      <Typography variant="body2" color="gray.700">
+                        <a
+                          href="https://developer.litprotocol.com/sdk/access-control/evm/basic-examples"
+                          style={{
+                            textDecoration: 'underline',
+                            color: 'white',
+                          }}
+                          target="_blank"
+                        >
+                          See more examples using Function Params.
+                        </a>{' '}
+                        If you need multiple params, separate them with a
+                        semicolon (;)
+                      </Typography>
+                    </Stack> 
+                    <Stack spacing={1}>
+                      <Typography fontSize={'18px'}>Comparator</Typography>
+                      <Select
+                        value={comparator}
+                        placeholder="Select Comparator"
+                        onChange={(e) => setComparator(e.target.value)}
+                        MenuProps={{
+                          PaperProps: {
+                            style: {
+                              backgroundColor: '#222222',
+                            },
+                          },
+                        }}
+                      >
+                        {availableComparators &&
+                          availableComparators.map((comparator) => (
+                            <MenuItem
+                              key={comparator.id}
+                              value={comparator.value}
+                              sx={{
+                                '&:hover': {
+                                  backgroundColor: '#333333',
+                                },
+                              }}
+                            >
+                              {comparator.label} ({comparator.value})
+                            </MenuItem>
+                          ))}
+                      </Select>
+                      <Typography variant="body2" color="gray.700">
+                        <a
+                          href="https://developer.litprotocol.com/sdk/access-control/evm/basic-examples"
+                          style={{
+                            textDecoration: 'underline',
+                            color: 'white',
+                          }}
+                          target="_blank"
+                        >
+                          Learn more about Lit comparators.
+                        </a>
+                      </Typography>
+                    </Stack>
+                    {comparator !== 'contains' && comparator !== '!contains' ? (
+                      <>
+                        <Stack spacing={1}>
+                          <Typography fontSize={'18px'}>
+                            Comparison Value
+                          </Typography>
+                          <ZuInput
+                            value={comparisonValue}
+                            placeholder="comparisonValue"
+                            onChange={(e) => setComparisonValue(e.target.value)}
+                          />
+                        </Stack>
+                      </>
+                    ) : null}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>*/}
+            </>
+          ) : null}
         </Stack>
       </DialogContent>
       <DialogActions
