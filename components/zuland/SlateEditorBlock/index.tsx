@@ -45,13 +45,20 @@ export const SlateEditorBlock = forwardRef<
   };
 
   const addEditor = () => {
-    setEditors((prevEditors) => [
-      ...prevEditors,
-      {
-        key: prevEditors.length,
-        ref: createRef<EditorActions>(),
-      },
-    ]);
+    setEditors((prevEditors) => {
+      // Check if the current number of editors is less than 10
+      if (prevEditors.length < 10) {
+        return [
+          ...prevEditors,
+          {
+            key: prevEditors.length,
+            ref: createRef<EditorActions>(),
+          },
+        ];
+      }
+      // If we already have 10 editors, return the current state without changes
+      return prevEditors;
+    });
   };
 
   const removeEditor = (key: number) => {
@@ -115,7 +122,12 @@ export const SlateEditorBlock = forwardRef<
           )}
         </Box>
       ))}
-      <Button variant="contained" color="primary" onClick={addEditor}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={addEditor}
+        disabled={editors.length >= 10}
+      >
         Add Block
       </Button>
     </Box>
