@@ -34,7 +34,7 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   });
 
   const {
-    data,
+    data: beamsData,
     fetchNextPage,
     hasNextPage: hasMoreBeams,
     isLoading: isLoadingBeams,
@@ -45,9 +45,9 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
     queryFn: async ({ pageParam }) => {
       const readableBeams = await getZulandReadableBeams(eventId, {
         first: 10,
-        after: (pageParam as string) ?? '',
+        after: pageParam,
       });
-      console.log('akasha', { readableBeams });
+      pageParam = readableBeams.pageInfo.endCursor ?? '';
       return readableBeams;
     },
     initialPageParam: '',
@@ -63,9 +63,9 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
 
   const selectedPost = posts.find((post) => post.id === postId);
 
-  const getSortedPosts = (posts: Post[], sort: string): Post[] => {
+  const getSortedPosts = (inputPosts: Post[], sort: string): Post[] => {
     if (sort === 'NEW' || sort === 'OLDEST') {
-      const sortedPosts = [...posts].sort((a, b) => {
+      const sortedPosts = [...inputPosts].sort((a, b) => {
         const dateA = new Date(a.createdAt || 0);
         const dateB = new Date(b.createdAt || 0);
         return selectedSort === 'OLDEST'
@@ -74,21 +74,24 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
       });
       return sortedPosts;
     }
-    return posts;
+    return inputPosts;
   };
 
   useEffect(() => {
-    if (data) {
-      const allBeams = data.pages.flatMap((page) =>
-        page.edges ? page.edges.map((edge) => edge.node) : [],
-      );
-      setBeams(allBeams);
-      const newPosts = akashaBeamToMarkdown(allBeams, eventId);
+    if (beamsData) {
+      // Get the last page from the data
+      const lastPage = beamsData.pages[beamsData.pages.length - 1];
+      // Process only the beams from the last page
+      const lastPageBeams = lastPage.edges
+        ? lastPage.edges.map((edge) => edge.node)
+        : [];
+      setBeams(lastPageBeams);
+      const newPosts = akashaBeamToMarkdown(lastPageBeams, eventId);
       const sortedPosts = getSortedPosts(newPosts, selectedSort);
       setPosts(sortedPosts);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [beamsData]);
 
   useEffect(() => {
     const sortedPosts = getSortedPosts(posts, selectedSort);
