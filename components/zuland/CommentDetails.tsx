@@ -236,7 +236,19 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
               isFetchingChildReflections) && (
               <Stack direction="row" justifyContent="center" spacing="10px">
                 <ZuButton
-                  sx={{ width: '150px', display: 'flex', gap: '10px' }}
+                  sx={{
+                    width: '150px',
+                    display: 'flex',
+                    gap: '10px',
+                    color: 'white',
+                    borderRadius: '10px',
+                    padding: '4px 20px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    '& > span': {
+                      margin: '0px',
+                    },
+                  }}
                   onClick={loadMoreChildReflections}
                   disabled={
                     !hasMoreChildReflections ||
@@ -245,10 +257,12 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                   }
                 >
                   {isLoadingChildReflections || isFetchingChildReflections ? (
-                    <>
+                    <div>
                       <CircularProgress size="20px" color="info" />
-                      Loading...
-                    </>
+                      <Typography variant="body2" color="white">
+                        Loading...
+                      </Typography>
+                    </div>
                   ) : hasMoreChildReflections ? (
                     <>Load More</>
                   ) : (

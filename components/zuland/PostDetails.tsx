@@ -100,6 +100,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
 
   useEffect(() => {
     if (reflectionsData) {
+      const reflectionsCount = reflectionsData.pages[0]?.reflectionsCount ?? 0;
       const allReflections = reflectionsData.pages.flatMap(
         (page) =>
           page?.reflections.edges
@@ -109,7 +110,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
             ) ?? [],
       );
       setReflections(allReflections);
-      setReflectionCount(allReflections.length);
+      setReflectionCount(reflectionsCount);
     }
   }, [reflectionsData]);
 
@@ -159,7 +160,6 @@ const PostDetails: React.FC<PostDetailsProps> = ({
       propertyType: 'slate-block',
       value: encodeSlateToBase64(content.slateContent),
     }));
-    console.log({ parentReflectionId, topics, editorContents });
 
     try {
       await createZulandReflection({
