@@ -9,6 +9,9 @@ import {
   ProfileImageSourceInput,
   AkashaContentBlockBlockDef,
   BlockLabeledValue,
+  BlockLabeledValueInput,
+  AkashaAppApplicationType,
+  AppProviderValueInput,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import { AkashaProfile } from '@akashaorg/typings/lib/ui';
 import { Descendant } from 'slate';
@@ -184,6 +187,20 @@ export type ZulandCreateAppReleaseInput = {
   applicationID: string;
   version: string;
   source: string;
+  meta?: Array<AppProviderValueInput>;
+};
+
+export type ZulandCreateAppReleaseInputWithTicketRules = {
+  applicationID: string;
+  version: string;
+  source: string;
+  ticketRequirements?: {
+    contractAddress: string;
+    chain: string;
+    method?: string;
+    comparator?: string;
+    value?: string;
+  };
 };
 
 export type ZulandReadableReflectionResult = {
@@ -225,6 +242,149 @@ export type ZulandReadableReflection = {
       id: string;
       isViewer: boolean;
     };
+  };
+};
+
+export type ZulandContentBlockInput = {
+  active?: boolean;
+  content: Array<BlockLabeledValueInput>;
+  createdAt?: string;
+  nsfw?: boolean;
+  kind?: AkashaContentBlockBlockDef;
+};
+
+export type AkashaAppDocument = {
+  applicationID: any;
+  id: string;
+  source: any;
+  version: string;
+  createdAt: any;
+  application?: {
+    id: string;
+    applicationType?: AkashaAppApplicationType | null;
+    description: string;
+    license: string;
+    name: string;
+    displayName: string;
+    keywords?: Array<string | null> | null;
+    releasesCount: number;
+    releases: {
+      edges?: Array<{
+        cursor: string;
+        node?: {
+          id: string;
+          createdAt: any;
+          source: any;
+          version: string;
+        } | null;
+      } | null> | null;
+    };
+    author: {
+      id: string;
+      isViewer: boolean;
+      akashaProfile?: {
+        id: string;
+        name: string;
+        description?: string | null;
+        appID: any;
+        appVersionID: any;
+        createdAt: any;
+        nsfw?: boolean | null;
+        did: {
+          id: string;
+          isViewer: boolean;
+        };
+        links?: Array<{
+          href: any;
+          label?: string | null;
+        } | null> | null;
+        background?: {
+          alternatives?: Array<{
+            src: any;
+            width: number;
+            height: number;
+          } | null> | null;
+          default: {
+            src: any;
+            width: number;
+            height: number;
+          };
+        } | null;
+        avatar?: {
+          default: {
+            src: any;
+            width: number;
+            height: number;
+          };
+          alternatives?: Array<{
+            src: any;
+            width: number;
+            height: number;
+          } | null> | null;
+        } | null;
+        followers: {
+          pageInfo: {
+            startCursor?: string | null;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            hasNextPage: boolean;
+          };
+        };
+      } | null;
+    };
+    contributors?: Array<{
+      id: string;
+      isViewer: boolean;
+      akashaProfile?: {
+        id: string;
+        name: string;
+        description?: string | null;
+        appID: any;
+        appVersionID: any;
+        createdAt: any;
+        nsfw?: boolean | null;
+        did: {
+          id: string;
+          isViewer: boolean;
+        };
+        links?: Array<{
+          href: any;
+          label?: string | null;
+        } | null> | null;
+        background?: {
+          alternatives?: Array<{
+            src: any;
+            width: number;
+            height: number;
+          } | null> | null;
+          default: {
+            src: any;
+            width: number;
+            height: number;
+          };
+        } | null;
+        avatar?: {
+          default: {
+            src: any;
+            width: number;
+            height: number;
+          };
+          alternatives?: Array<{
+            src: any;
+            width: number;
+            height: number;
+          } | null> | null;
+        } | null;
+        followers: {
+          pageInfo: {
+            startCursor?: string | null;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            hasNextPage: boolean;
+          };
+        };
+      } | null;
+    } | null> | null;
   };
 };
 

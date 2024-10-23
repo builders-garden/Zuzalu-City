@@ -27,7 +27,7 @@ import SortList from './SortList';
 
 import { buildIpfsUrl, Post } from '@/utils/akasha/beam-to-post';
 import {
-  createReflection,
+  createZulandReflection,
   encodeSlateToBase64,
   getTopReadableReflectionsByBeamId,
   standardDateFormat,
@@ -162,7 +162,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
     console.log({ parentReflectionId, topics, editorContents });
 
     try {
-      await createReflection({
+      await createZulandReflection({
         beamID: postId,
         createdAt: new Date().toISOString(),
         active: true,

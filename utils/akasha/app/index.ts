@@ -12,7 +12,6 @@ export async function getAppByEventId(eventId: string) {
       where: {
         name: {
           equalTo: `@bg-${sha1Hash}`,
-          // equalTo: `@buildersgarden/zuland-tests`,
         },
       },
     },

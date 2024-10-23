@@ -5,6 +5,8 @@ import {
 import { ZulandReadableReflection } from '../akasha.d';
 import { getProfileByDid } from '../profile';
 import { convertBlockContentToReadableBlock } from '../block/utils';
+import { AccessControlCondition } from '@/utils/lit/types';
+import { ZulandLit } from '@/utils/lit';
 
 export async function extractReadableReflections(
   reflections: AkashaReflectEdge[],
@@ -45,4 +47,100 @@ export async function extractReadableReflection(
     node: ZulandReadableReflection;
     cursor: string;
   };
+}
+
+export async function extractDecryptedReadableReflections(
+  reflections: AkashaReflectEdge[],
+  acc?: AccessControlCondition[],
+): Promise<
+  {
+    node: ZulandReadableReflection;
+    cursor: string;
+  }[]
+> {
+  console.log(`Extracting reflections`, reflections);
+  let readableReflections;
+  if (!acc) {
+    readableReflections = await Promise.all(
+      reflections.map(async (reflection) => {
+        return await extractReadableReflection(reflection);
+      }),
+    );
+  } else {
+    const chain = acc[0].chain;
+    const zulandLit = new ZulandLit(chain);
+    readableReflections = await Promise.all(
+      reflections.map(async (reflection) => {
+        return await extractDecryptedReadableReflection(reflection, {
+          nodeClient: zulandLit,
+          acc,
+        });
+      }),
+    );
+    await zulandLit.disconnect();
+  }
+  return readableReflections;
+}
+
+export async function extractDecryptedReadableReflection(
+  reflection: AkashaReflectEdge,
+  litParams: {
+    nodeClient: ZulandLit;
+    acc: AccessControlCondition[];
+  },
+): Promise<{
+  node: ZulandReadableReflection;
+  cursor: string;
+}> {
+  const tmp = {
+    cursor: reflection.cursor,
+    node: reflection.node
+      ? {
+          ...reflection.node,
+          content: await Promise.all(
+            reflection.node.content.map(async (content: BlockLabeledValue) => {
+              console.log(`reflection to be extracted`, {
+                reflection,
+                value: content.value,
+              });
+              let decryptedContent = content.value;
+              let ciphertext = undefined;
+              let dataToEncryptHash = undefined;
+              try {
+                const encryptedContent = JSON.parse(content.value) as {
+                  ciphertext: string;
+                  dataToEncryptHash: string;
+                };
+                ciphertext = encryptedContent.ciphertext;
+                dataToEncryptHash = encryptedContent.dataToEncryptHash;
+              } catch (error) {
+                console.warn('Error parsing encrypted content', error);
+              }
+              if (ciphertext !== undefined && dataToEncryptHash !== undefined) {
+                try {
+                  decryptedContent = await litParams.nodeClient.decryptString(
+                    ciphertext,
+                    dataToEncryptHash,
+                    litParams.acc,
+                  );
+                } catch (error) {
+                  console.warn('Error decrypting content', error);
+                }
+              }
+              return convertBlockContentToReadableBlock({
+                ...content,
+                value: decryptedContent,
+              });
+            }),
+          ),
+          author:
+            (await getProfileByDid(reflection.node.author.id)) ??
+            reflection.node.author,
+        }
+      : null,
+  } as {
+    node: ZulandReadableReflection;
+    cursor: string;
+  };
+  return tmp;
 }
