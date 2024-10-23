@@ -23,6 +23,7 @@ import { getAppByEventId } from '../app';
 import { createBlockContent } from '../block';
 import { ZulandLit } from '@/utils/lit';
 import { AccessControlCondition } from '@/utils/lit/types';
+import { beam } from 'viem/chains';
 
 const DEFAULT_BEAMS_TAKE = 10;
 
@@ -332,23 +333,27 @@ export async function getReadableBeamsFromAppRelease(
     };
   }
   return {
-    edges: await Promise.all(
-      beams.edges.map(async (edge) => {
-        // check here if the beam needs to be decrypted
-        try {
-          return {
-            cursor: edge?.cursor,
-            node: await extractDecryptedBeamReadableContent(
-              edge?.node as AkashaBeam,
-              appReleases,
-            ),
-          };
-        } catch (error) {
-          console.error('Error decrypting beam', error);
-          throw new Error('Error decrypting beam');
-        }
-      }),
-    ),
+    edges: (
+      await Promise.all(
+        beams.edges.map(async (edge) => {
+          // check here if the beam needs to be decrypted
+          try {
+            return {
+              cursor: edge?.cursor,
+              node: await extractDecryptedBeamReadableContent(
+                edge?.node as AkashaBeam,
+                appReleases,
+              ),
+            };
+          } catch (error) {
+            // console.error('Error decrypting beam', error);
+            // remove the beam from the list
+            console.log('skipping beam because of error');
+            throw error;
+          }
+        }),
+      )
+    ).filter((edge) => edge !== null && edge !== undefined),
     pageInfo: beams.pageInfo,
   };
 }

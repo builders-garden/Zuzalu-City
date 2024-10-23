@@ -1,11 +1,10 @@
 import {
-  AkashaAppRelease,
   AkashaBeam,
   AkashaBeamEdge,
   AkashaContentBlock,
 } from '@akashaorg/typings/lib/sdk/graphql-types-new';
 import akashaSdk from '../akasha';
-import { decodeb64SlateContent } from '../akasha-utils';
+import { decodeb64SlateContent, encodeSlateToBase64 } from '../akasha-utils';
 import { getProfileByDid } from '../profile';
 import { ZulandReadableBeam, ZulandReadbleBlock } from '../akasha.d';
 import { AccessControlCondition } from '@/utils/lit/types';
@@ -84,35 +83,50 @@ export async function extractDecryptedBeamReadableContent(
                   (appRelease) => appRelease.id === encodedBlock.appVersionID,
                 );
                 if (blockAppRelease) {
-                  try {
-                    const ticketRequirements =
-                      blockAppRelease?.meta?.find(
-                        (meta) => meta?.property === 'TEXT#ENCRYPTED',
-                      ) ?? null;
-                    if (ticketRequirements) {
-                      const litAcc: AccessControlCondition = JSON.parse(
-                        ticketRequirements.value,
-                      );
-                      const zulandLit = new ZulandLit(litAcc.chain);
+                  const ticketRequirements =
+                    blockAppRelease?.meta?.find(
+                      (meta) => meta?.property === 'TEXT#ENCRYPTED',
+                    ) ?? null;
+                  if (ticketRequirements) {
+                    const litAcc: AccessControlCondition = ticketRequirements
+                      ? JSON.parse(ticketRequirements.value)
+                      : null;
+                    const zulandLit = new ZulandLit(litAcc.chain);
+                    try {
                       const { ciphertext, dataToEncryptHash } = JSON.parse(
                         content.value,
                       ) as {
                         ciphertext: string;
                         dataToEncryptHash: string;
                       };
+                      // console.log('Decrypting blocks content...');
+                      // console.log({ ciphertext, dataToEncryptHash });
                       decryptedContent = await zulandLit.decryptString(
                         ciphertext,
                         dataToEncryptHash,
                         [litAcc],
                       );
+                    } catch (error) {
+                      // instead of an error create a fake block
+                      console.warn('Unable to decrypt this block content', {
+                        encodedBlock,
+                        rawBlock: block,
+                        error,
+                      });
+                      // decryptedContent = encodeSlateToBase64([
+                      //   {
+                      //     type: 'paragraph',
+                      //     children: [
+                      //       {
+                      //         text: 'Unable to decrypt this content',
+                      //       },
+                      //     ],
+                      //   },
+                      // ]);
+                      throw new Error('Unable to decrypt this block content');
+                    } finally {
                       await zulandLit.disconnect();
                     }
-                  } catch (error) {
-                    console.warn(
-                      'Block content with unknown format, ignoring:',
-                      error,
-                    );
-                    throw new Error('Block content with unknown format');
                   }
                 }
                 switch (content.propertyType) {

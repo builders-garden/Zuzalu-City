@@ -87,6 +87,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
               return (
                 <Typography key={key} variant="body1">
                   {typeof block.value !== 'string' &&
+                    block.value &&
                     block.value.map((child, index) => (
                       <span key={index}>
                         {child.children.map((text, i) => (

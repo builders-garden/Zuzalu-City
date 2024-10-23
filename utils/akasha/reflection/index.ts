@@ -18,7 +18,14 @@ import {
   ZulandReadableReflectionResult,
   ZulandReadableReflectionWithChildren,
 } from '../akasha.d';
-import { extractReadableReflections } from './utils';
+import {
+  extractDecryptedReadableReflections,
+  extractReadableReflections,
+} from './utils';
+import { ZulandLit } from '@/utils/lit';
+import { AccessControlCondition } from '@/utils/lit/types';
+import { getBeamById } from '../beam';
+import { getAppReleaseById } from '../appRelease';
 
 const DEFAULT_REFLECTIONS_TAKE = 10;
 
@@ -42,6 +49,64 @@ export async function createReflection(
     );
 
   return createAkashaReflectionResponse?.createAkashaReflect ?? null;
+}
+
+export async function createZulandReflection(
+  reflection: AkashaReflectInput,
+  clientMutationId?: string,
+  options?: CreateOptionsInput,
+) {
+  // reflection will follow the same Beam encryption requirements
+  const parentBeam = await getBeamById(reflection.beamID);
+  const appRelease = await getAppReleaseById(parentBeam?.appVersionID);
+  // const app = await getAppByEventId(eventId);
+  // const appRelease = app?.releases.edges?.[0]?.node ?? null;
+  // const appRelease = parentBeam?.appVersion;
+  console.log('creating a new reflection', {
+    reflection,
+    parentBeam,
+    appRelease,
+  });
+  let encryptedContent = reflection.content;
+  if (!appRelease) {
+    throw new Error('App release not found');
+  }
+  if (appRelease) {
+    const ticketRequirements =
+      appRelease?.meta?.find((meta) => meta?.property === 'TEXT#ENCRYPTED') ??
+      null;
+    if (ticketRequirements) {
+      const litACC: AccessControlCondition = JSON.parse(
+        ticketRequirements.value,
+      );
+      const zulandLit = new ZulandLit(litACC.chain);
+
+      // encrypt every reflection.content object
+      encryptedContent = await Promise.all(
+        reflection.content.map(async (content) => {
+          if (content) {
+            const { ciphertext, dataToEncryptHash } =
+              await zulandLit.encryptString(content.value, [litACC]);
+            return {
+              ...content,
+              value: JSON.stringify({ ciphertext, dataToEncryptHash }),
+            };
+          }
+          return content;
+        }),
+      );
+      await zulandLit.disconnect();
+    }
+  }
+
+  return createReflection(
+    {
+      ...reflection,
+      content: encryptedContent,
+    },
+    clientMutationId,
+    options,
+  );
 }
 
 export async function getReflectionsFromBeamId(
@@ -210,14 +275,26 @@ export async function getTopReadableReflectionsByBeamId(
     return null;
   }
 
+  const parentBeam = await getBeamById(beamId);
+  const appRelease = await getAppReleaseById(parentBeam?.appVersionID);
+  // const appRelease = parentBeam?.appVersion;
+  const ticketRequirements = appRelease?.meta?.find(
+    (meta) => meta?.property === 'TEXT#ENCRYPTED',
+  );
+
+  console.log(
+    'ticket requiremets',
+    ticketRequirements ? JSON.parse(ticketRequirements?.value) : null,
+  );
   const readableReflections: (
     | {
         node: ZulandReadableReflection;
         cursor: string;
       }
     | undefined
-  )[] = await extractReadableReflections(
+  )[] = await extractDecryptedReadableReflections(
     unreadableReflections.reflections.edges as AkashaReflectEdge[],
+    ticketRequirements ? [JSON.parse(ticketRequirements.value)] : undefined,
   );
 
   return {
@@ -253,15 +330,30 @@ export async function getReadableReflectionsByReflectionId(
     };
   }
 
-  if (!res.edges) {
+  if (!res.edges || res.edges.length === 0) {
     return {
       pageInfo: res.pageInfo,
       edge: [],
     };
   }
 
-  const readableReflections = await extractReadableReflections(
+  const beamId = res.edges[0]?.node?.beam?.id as string;
+  const parentBeam = await getBeamById(beamId);
+  const appRelease = await getAppReleaseById(parentBeam?.appVersionID);
+  const ticketRequirements = appRelease?.meta?.find(
+    (meta) => meta?.property === 'TEXT#ENCRYPTED',
+  );
+
+  console.log({
+    ticketRequirements,
+    appRelease,
+    edges: res.edges,
+    parentBeam,
+  });
+
+  const readableReflections = await extractDecryptedReadableReflections(
     res.edges as AkashaReflectEdge[],
+    ticketRequirements ? [JSON.parse(ticketRequirements.value)] : undefined,
   );
 
   const readableReflectionsWithChildren: {
@@ -297,6 +389,11 @@ export async function getReadableReflectionsByReflectionId(
       });
     }
   }
+
+  console.log(
+    'readableReflectionsWithChildren',
+    readableReflectionsWithChildren,
+  );
 
   return {
     pageInfo: res.pageInfo,
