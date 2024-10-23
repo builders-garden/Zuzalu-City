@@ -2,7 +2,11 @@
 
 import { useState, Dispatch, SetStateAction, useEffect, useMemo } from 'react';
 import { ZuButton, ZuInput, ZuSwitch } from '@/components/core';
-import { createApp, createAppRelease, getAppByEventId } from '@/utils/akasha';
+import {
+  createApp,
+  createZulandAppRelease,
+  getAppByEventId,
+} from '@/utils/akasha';
 import {
   Dialog,
   DialogActions,
@@ -12,11 +16,7 @@ import {
   Select,
   Stack,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { LIT_CHAINS } from '@lit-protocol/constants';
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 import { isAddress } from 'viem';
@@ -71,16 +71,16 @@ export default function CreateDiscussionModal({
       }));
   }, []);
 
-  const availableComparators = [
-    { id: 1, value: '>', label: 'Greater Than' },
-    { id: 2, value: '<', label: 'Less Than' },
-    { id: 3, value: '>=', label: 'Greater Than or Equal to' },
-    { id: 4, value: '<=', label: 'Less Than or Equal to' },
-    { id: 5, value: '=', label: 'Equal To' },
-    { id: 6, value: '!=', label: 'Not Equal To' },
-    { id: 7, value: 'contains', label: 'Contains' },
-    { id: 7, value: '!contains', label: 'Not Contains' },
-  ];
+  // const availableComparators = [
+  //   { id: 1, value: '>', label: 'Greater Than' },
+  //   { id: 2, value: '<', label: 'Less Than' },
+  //   { id: 3, value: '>=', label: 'Greater Than or Equal to' },
+  //   { id: 4, value: '<=', label: 'Less Than or Equal to' },
+  //   { id: 5, value: '=', label: 'Equal To' },
+  //   { id: 6, value: '!=', label: 'Not Equal To' },
+  //   { id: 7, value: 'contains', label: 'Contains' },
+  //   { id: 7, value: '!contains', label: 'Not Contains' },
+  // ];
 
   useEffect(() => {
     async function checkAppExists() {
@@ -105,11 +105,17 @@ export default function CreateDiscussionModal({
     if (!contractAddress || !isAddress(contractAddress)) {
       showToast('Please enter a valid contract address', 'error');
       return;
-    } else if (!chainName) {
+    }
+    if (!chainName) {
       showToast('Please select a chain', 'error');
       return;
-    } else if (!displayName) {
+    }
+    if (!displayName) {
       showToast('Please enter a display name', 'error');
+      return;
+    }
+    if (!functionName || !comparator || !comparisonValue) {
+      showToast('Please enter valid contract details', 'error');
       return;
     }
 
@@ -127,10 +133,17 @@ export default function CreateDiscussionModal({
           description: description,
         });
         if (createAppResult) {
-          const createAppReleaseResult = await createAppRelease({
+          const createAppReleaseResult = await createZulandAppRelease({
             applicationID: createAppResult?.document.id,
+            version: '0.0.2',
             source: `https://zuzalu.city/events/${eventId}`,
-            version: '1.0.0',
+            ticketRequirements: {
+              contractAddress: contractAddress, // ?? '0xAe8ccE7d5aF9D7f2A0e2295b7F2e53f249E9cAdE',
+              chain: chainName, // ?? 'sepolia',
+              method: functionName, // ?? 'balanceOf',
+              comparator: comparator, // ?? '>',
+              value: comparisonValue, // ?? '0',
+            },
           });
           console.log('createAppReleaseResult', createAppReleaseResult);
           showToast(
@@ -259,14 +272,14 @@ export default function CreateDiscussionModal({
                     litSupportedChains.map((chain) => (
                       <MenuItem
                         key={chain.litIdentifier}
-                        value={chain.chainName}
+                        value={chain.litIdentifier}
                         sx={{
                           '&:hover': {
                             backgroundColor: '#333333',
                           },
                         }}
                       >
-                        {chain.chainName}
+                        {chain.chainName} ({chain.chainId})
                       </MenuItem>
                     ))}
                 </Select>

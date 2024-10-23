@@ -179,7 +179,6 @@ const EditorBox = forwardRef<EditorActions, EditorBoxProps>((props, ref) => {
           app: publishingApp,
           mentions: [],
           version: 1,
-          tags: [],
         };
 
         /**

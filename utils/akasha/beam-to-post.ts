@@ -38,7 +38,8 @@ export const akashaBeamToMarkdown = (
       title: title,
       author: beam.author,
       originalContent: beam.content.flatMap((block) =>
-        block.content.flatMap((value) => {
+        // we are saving akasha posts with the title in the first block, so we skip it
+        block.content.slice(1).flatMap((value) => {
           if (
             value.propertyType === 'slate-block' &&
             typeof value.value === 'object'
