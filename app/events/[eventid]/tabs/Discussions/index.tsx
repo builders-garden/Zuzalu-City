@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useQueryState } from 'nuqs';
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 
@@ -13,6 +13,7 @@ import NewPost from '@/components/zuland/NewPost';
 import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-post';
 import Container from '@/components/zuland/Container';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 interface DiscussionsProps {
   eventId: string;
@@ -33,21 +34,32 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   });
 
   const {
-    data: fetchedBeams,
+    data,
+    fetchNextPage,
+    hasNextPage: hasMoreBeams,
     isLoading: isLoadingBeams,
     isFetching: isFetchingBeams,
     error,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ['beams', eventId],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const readableBeams = await getZulandReadableBeams(eventId, {
         first: 10,
+        after: (pageParam as string) ?? '',
       });
-      return readableBeams.edges
-        ? readableBeams.edges.map((edge) => edge.node)
-        : [];
+      console.log('akasha', { readableBeams });
+      return readableBeams;
     },
+    initialPageParam: '',
+    getNextPageParam: (lastPage) =>
+      lastPage.pageInfo.hasNextPage ? lastPage.pageInfo.endCursor : undefined,
   });
+
+  const loadMoreBeams = () => {
+    if (hasMoreBeams) {
+      fetchNextPage();
+    }
+  };
 
   const selectedPost = posts.find((post) => post.id === postId);
 
@@ -66,15 +78,17 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   };
 
   useEffect(() => {
-    if (fetchedBeams) {
-      setBeams(fetchedBeams);
-      const newPosts = akashaBeamToMarkdown(fetchedBeams, eventId);
+    if (data) {
+      const allBeams = data.pages.flatMap((page) =>
+        page.edges ? page.edges.map((edge) => edge.node) : [],
+      );
+      setBeams(allBeams);
+      const newPosts = akashaBeamToMarkdown(allBeams, eventId);
       const sortedPosts = getSortedPosts(newPosts, selectedSort);
-      // console.log({ fetchedBeams, newPosts });
       setPosts(sortedPosts);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedBeams]);
+  }, [data]);
 
   useEffect(() => {
     const sortedPosts = getSortedPosts(posts, selectedSort);
@@ -119,6 +133,8 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
             setIsNewPostOpen={setIsNewPostOpen}
             selectedSort={selectedSort}
             setSelectedSort={setSelectedSort}
+            loadMoreBeams={loadMoreBeams}
+            hasMoreBeams={hasMoreBeams}
           />
         )}
       </Stack>

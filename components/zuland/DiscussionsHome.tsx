@@ -29,6 +29,8 @@ interface DiscussionsHomeProps {
   setIsNewPostOpen: (value: string) => void;
   selectedSort: string;
   setSelectedSort: Dispatch<SetStateAction<string>>;
+  loadMoreBeams: () => void;
+  hasMoreBeams: boolean;
 }
 
 const DiscussionsHome = ({
@@ -38,6 +40,8 @@ const DiscussionsHome = ({
   setIsNewPostOpen,
   selectedSort,
   setSelectedSort,
+  loadMoreBeams,
+  hasMoreBeams,
 }: DiscussionsHomeProps) => {
   const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
 
@@ -56,6 +60,12 @@ const DiscussionsHome = ({
       .catch((err) => {
         console.error('err', err);
       });
+  };
+
+  const handleLoadMoreBeams = () => {
+    if (hasMoreBeams && !isLoadingBeams) {
+      loadMoreBeams();
+    }
   };
 
   return (
@@ -160,18 +170,23 @@ const DiscussionsHome = ({
         </Stack>
 
         {/* Pagination */}
-        <Stack direction="row" justifyContent="center" spacing="10px">
-          <ZuButton sx={{ width: '150px', display: 'flex', gap: '10px' }}>
-            {isLoadingBeams ? (
-              <>
-                <CircularProgress size="20px" color="info" />
-                Loading...
-              </>
-            ) : (
-              <>Load More</>
-            )}
-          </ZuButton>
-        </Stack>
+        {hasMoreBeams ? (
+          <Stack direction="row" justifyContent="center" spacing="10px">
+            <ZuButton
+              sx={{ width: '150px', display: 'flex', gap: '10px' }}
+              onClick={handleLoadMoreBeams}
+            >
+              {isLoadingBeams ? (
+                <>
+                  <CircularProgress size="20px" color="info" />
+                  Loading...
+                </>
+              ) : (
+                <>Load More</>
+              )}
+            </ZuButton>
+          </Stack>
+        ) : null}
 
         {showAkashaModal && (
           <AkashaConnectModal
