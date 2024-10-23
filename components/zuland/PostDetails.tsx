@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 
 import {
   Stack,
@@ -75,24 +75,41 @@ const PostDetails: React.FC<PostDetailsProps> = ({
 
   const {
     data: reflectionsData,
-    isLoading,
-    isFetching,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage: hasMoreReflections,
+    isLoading: isLoadingReflections,
+    isFetching: isFetchingReflections,
+    error,
+  } = useInfiniteQuery({
     queryKey: ['reflections', postId],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       if (!postId) return null;
-      return await getTopReadableReflectionsByBeamId(postId);
+      const reflections = await getTopReadableReflectionsByBeamId(postId, {
+        first: 1,
+        after: pageParam,
+      });
+      pageParam = reflections?.reflections.pageInfo.endCursor ?? '';
+      return reflections;
     },
+    initialPageParam: '',
+    getNextPageParam: (lastPage) =>
+      lastPage?.reflections.pageInfo.hasNextPage
+        ? lastPage.reflections.pageInfo.endCursor
+        : undefined,
   });
 
   useEffect(() => {
     if (reflectionsData) {
-      setReflections(
-        reflectionsData.reflections.edges
-          .map((edge) => (edge ? edge.node : null))
-          .filter((node) => node !== null) as ZulandReadableReflection[],
+      const allReflections = reflectionsData.pages.flatMap(
+        (page) =>
+          page?.reflections.edges
+            .map((edge) => edge?.node)
+            .filter(
+              (node): node is ZulandReadableReflection => node !== null,
+            ) ?? [],
       );
-      setReflectionCount(reflectionsData.reflectionsCount);
+      setReflections(allReflections);
+      setReflectionCount(allReflections.length);
     }
   }, [reflectionsData]);
 
@@ -169,6 +186,12 @@ const PostDetails: React.FC<PostDetailsProps> = ({
   };
 
   const toggleProfileDrawer = () => setOpenProfileDrawer((v) => !v);
+
+  const loadMoreReflections = () => {
+    if (hasMoreReflections) {
+      fetchNextPage();
+    }
+  };
 
   return (
     <div>
@@ -344,14 +367,24 @@ const PostDetails: React.FC<PostDetailsProps> = ({
 
         {/* Pagination */}
         <Stack direction="row" justifyContent="center" spacing="10px">
-          <ZuButton sx={{ width: '150px', display: 'flex', gap: '10px' }}>
-            {isLoading || isFetching ? (
+          <ZuButton
+            sx={{ width: '150px', display: 'flex', gap: '10px' }}
+            onClick={loadMoreReflections}
+            disabled={
+              !hasMoreReflections ||
+              isLoadingReflections ||
+              isFetchingReflections
+            }
+          >
+            {isLoadingReflections || isFetchingReflections ? (
               <>
                 <CircularProgress size="20px" color="info" />
                 Loading...
               </>
-            ) : (
+            ) : hasMoreReflections ? (
               <>Load More</>
+            ) : (
+              <>No More Replies</>
             )}
           </ZuButton>
         </Stack>

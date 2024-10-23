@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import {
   getReadableReflectionsByReflectionId,
@@ -8,7 +8,13 @@ import {
   ZulandReadableReflection,
 } from '@/utils/akasha';
 
-import { Stack, Typography, Avatar, Divider } from '@mui/material';
+import {
+  Stack,
+  Typography,
+  Avatar,
+  Divider,
+  CircularProgress,
+} from '@mui/material';
 import { Box } from '@mui/material';
 import { ZuButton } from '@/components/core';
 
@@ -35,12 +41,30 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const replyFormRef = useRef<HTMLDivElement>(null);
+  const [childReflections, setChildReflections] = useState<
+    ZulandReadableReflection[]
+  >([]);
 
-  const { data: childReflections } = useQuery({
+  const {
+    data: childReflectionsData,
+    fetchNextPage,
+    hasNextPage: hasMoreChildReflections,
+    isLoading: isLoadingChildReflections,
+    isFetching: isFetchingChildReflections,
+    error,
+  } = useInfiniteQuery({
     queryKey: ['childReflections', reflection.id],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       try {
-        return await getReadableReflectionsByReflectionId(reflection.id);
+        const childReflections = await getReadableReflectionsByReflectionId(
+          reflection.id,
+          {
+            first: 5,
+            after: pageParam,
+          },
+        );
+        pageParam = childReflections?.pageInfo?.endCursor ?? '';
+        return childReflections;
       } catch (error) {
         console.error('Error getting child reflections:', error);
         return {
@@ -49,7 +73,19 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
         };
       }
     },
+    initialPageParam: '',
+    getNextPageParam: (lastPage) =>
+      lastPage.pageInfo?.hasNextPage ? lastPage.pageInfo.endCursor : undefined,
   });
+
+  useEffect(() => {
+    if (childReflectionsData) {
+      const allChildReflections = childReflectionsData.pages.flatMap((page) =>
+        page.edge.map((edge) => edge.node),
+      );
+      setChildReflections(allChildReflections);
+    }
+  }, [childReflectionsData]);
 
   const handleReplyClick = () => {
     setShowReplyForm(true);
@@ -68,6 +104,12 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
   ) => {
     onReplySubmit(content, topics, parentReflectionId ?? reflection.id);
     setShowReplyForm(false);
+  };
+
+  const loadMoreChildReflections = () => {
+    if (hasMoreChildReflections) {
+      fetchNextPage();
+    }
   };
 
   return (
@@ -162,11 +204,11 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
             <div ref={replyFormRef} />
           </div>
         )}
-        {childReflections && childReflections.edge.length > 0 && (
+        {childReflections && childReflections.length > 0 && (
           <Stack spacing={1}>
-            {childReflections.edge.map((childReflection) => (
+            {childReflections.map((childReflection) => (
               <Stack
-                key={childReflection.node.id}
+                key={childReflection.id}
                 direction="row"
                 spacing={1}
                 alignItems="flex-start"
@@ -182,13 +224,39 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                 />
                 <CommentDetails
                   eventId={eventId}
-                  reflection={childReflection.node}
+                  reflection={childReflection}
                   onReplySubmit={(content, topics) =>
-                    handleReplySubmit(content, topics, childReflection.node.id)
+                    handleReplySubmit(content, topics, childReflection.id)
                   }
                 />
               </Stack>
             ))}
+            {(hasMoreChildReflections ||
+              isLoadingChildReflections ||
+              isFetchingChildReflections) && (
+              <Stack direction="row" justifyContent="center" spacing="10px">
+                <ZuButton
+                  sx={{ width: '150px', display: 'flex', gap: '10px' }}
+                  onClick={loadMoreChildReflections}
+                  disabled={
+                    !hasMoreChildReflections ||
+                    isLoadingChildReflections ||
+                    isFetchingChildReflections
+                  }
+                >
+                  {isLoadingChildReflections || isFetchingChildReflections ? (
+                    <>
+                      <CircularProgress size="20px" color="info" />
+                      Loading...
+                    </>
+                  ) : hasMoreChildReflections ? (
+                    <>Load More</>
+                  ) : (
+                    <>No More Replies</>
+                  )}
+                </ZuButton>
+              </Stack>
+            )}
           </Stack>
         )}
         <Divider />
