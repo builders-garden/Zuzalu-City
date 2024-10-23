@@ -14,6 +14,7 @@ import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-post';
 import Container from '@/components/zuland/Container';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { ZulandLit } from '@/utils/lit';
 
 interface DiscussionsProps {
   eventId: string;
@@ -43,6 +44,9 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   } = useInfiniteQuery({
     queryKey: ['beams', eventId],
     queryFn: async ({ pageParam }) => {
+      const zulandLit = new ZulandLit();
+      await zulandLit.connect();
+      await zulandLit.disconnect();
       const readableBeams = await getZulandReadableBeams(eventId, {
         first: 10,
         after: pageParam,

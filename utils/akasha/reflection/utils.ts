@@ -58,7 +58,6 @@ export async function extractDecryptedReadableReflections(
     cursor: string;
   }[]
 > {
-  console.log(`Extracting reflections`, reflections);
   let readableReflections;
   if (!acc) {
     readableReflections = await Promise.all(
@@ -69,6 +68,8 @@ export async function extractDecryptedReadableReflections(
   } else {
     const chain = acc[0].chain;
     const zulandLit = new ZulandLit(chain);
+    await zulandLit.connect();
+
     readableReflections = await Promise.all(
       reflections.map(async (reflection) => {
         return await extractDecryptedReadableReflection(reflection, {
@@ -99,10 +100,6 @@ export async function extractDecryptedReadableReflection(
           ...reflection.node,
           content: await Promise.all(
             reflection.node.content.map(async (content: BlockLabeledValue) => {
-              console.log(`reflection to be extracted`, {
-                reflection,
-                value: content.value,
-              });
               let decryptedContent = content.value;
               let ciphertext = undefined;
               let dataToEncryptHash = undefined;

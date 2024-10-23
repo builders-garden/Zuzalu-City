@@ -59,14 +59,6 @@ export async function createZulandReflection(
   // reflection will follow the same Beam encryption requirements
   const parentBeam = await getBeamById(reflection.beamID);
   const appRelease = await getAppReleaseById(parentBeam?.appVersionID);
-  // const app = await getAppByEventId(eventId);
-  // const appRelease = app?.releases.edges?.[0]?.node ?? null;
-  // const appRelease = parentBeam?.appVersion;
-  console.log('creating a new reflection', {
-    reflection,
-    parentBeam,
-    appRelease,
-  });
   let encryptedContent = reflection.content;
   if (!appRelease) {
     throw new Error('App release not found');
@@ -80,6 +72,7 @@ export async function createZulandReflection(
         ticketRequirements.value,
       );
       const zulandLit = new ZulandLit(litACC.chain);
+      await zulandLit.connect();
 
       // encrypt every reflection.content object
       encryptedContent = await Promise.all(
@@ -282,10 +275,6 @@ export async function getTopReadableReflectionsByBeamId(
     (meta) => meta?.property === 'TEXT#ENCRYPTED',
   );
 
-  console.log(
-    'ticket requiremets',
-    ticketRequirements ? JSON.parse(ticketRequirements?.value) : null,
-  );
   const readableReflections: (
     | {
         node: ZulandReadableReflection;
@@ -344,13 +333,6 @@ export async function getReadableReflectionsByReflectionId(
     (meta) => meta?.property === 'TEXT#ENCRYPTED',
   );
 
-  console.log({
-    ticketRequirements,
-    appRelease,
-    edges: res.edges,
-    parentBeam,
-  });
-
   const readableReflections = await extractDecryptedReadableReflections(
     res.edges as AkashaReflectEdge[],
     ticketRequirements ? [JSON.parse(ticketRequirements.value)] : undefined,
@@ -389,11 +371,6 @@ export async function getReadableReflectionsByReflectionId(
       });
     }
   }
-
-  console.log(
-    'readableReflectionsWithChildren',
-    readableReflectionsWithChildren,
-  );
 
   return {
     pageInfo: res.pageInfo,

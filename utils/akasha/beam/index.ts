@@ -126,18 +126,15 @@ export async function createBeamFromBlocks(params: {
   }
 
   // step 1: create the blocks
-  console.log('creating blocks before Beam creation...');
   const blockCreationResults = await Promise.all(
     params.blocks.map(createBlockContent),
   );
-  console.log("Beam's blocks created");
 
   // step 2: create the beam
   const beamContent = blockCreationResults.map((block, index) => ({
     blockID: block?.document?.id,
     order: index,
   }));
-  console.log('Creating beam...');
   const beamToCreate: AkashaBeamInput = {
     active: params.active,
     appID: app.id,
@@ -147,7 +144,6 @@ export async function createBeamFromBlocks(params: {
     tags: params.tags,
   };
   const beam = await createBeam(beamToCreate);
-  console.log('Beam created');
   return beam;
 }
 
@@ -159,18 +155,15 @@ export async function createBeamFromPlainBlocks(params: {
   tags?: Array<BeamLabeledInput>;
 }) {
   // step 1: create the blocks
-  console.log('creating blocks before Beam creation...');
   const blockCreationResults = await Promise.all(
     params.blocks.map(createBlockContent),
   );
-  console.log("Beam's blocks created");
 
   // step 2: create the beam
   const beamContent = blockCreationResults.map((block, index) => ({
     blockID: block?.document?.id,
     order: index,
   }));
-  console.log('Creating beam...');
   const beamToCreate: AkashaBeamInput = {
     active: params.active,
     appID: params.appId,
@@ -180,7 +173,6 @@ export async function createBeamFromPlainBlocks(params: {
     tags: params.tags,
   };
   const beam = await createBeam(beamToCreate);
-  console.log('Beam created');
   return beam;
 }
 
@@ -212,12 +204,12 @@ export async function createZulandBeamFromBlocks(params: {
       let encryptedBlockContent = block.content;
       if (ticketRequirements) {
         // encrypt blocks content here
-        console.log('Encrypting blocks content...');
         try {
           const litACC: AccessControlCondition = JSON.parse(
             ticketRequirements.value,
           );
           const zulandLit = new ZulandLit(litACC.chain);
+          await zulandLit.connect();
           encryptedBlockContent = await Promise.all(
             encryptedBlockContent.map(async (blockContent) => {
               return {
@@ -348,7 +340,7 @@ export async function getReadableBeamsFromAppRelease(
           } catch (error) {
             // console.error('Error decrypting beam', error);
             // remove the beam from the list
-            console.log('skipping beam because of error');
+            console.warn('skipping beam because of error');
             throw error;
           }
         }),

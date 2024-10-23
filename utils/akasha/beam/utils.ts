@@ -92,6 +92,7 @@ export async function extractDecryptedBeamReadableContent(
                       ? JSON.parse(ticketRequirements.value)
                       : null;
                     const zulandLit = new ZulandLit(litAcc.chain);
+                    await zulandLit.connect();
                     try {
                       const { ciphertext, dataToEncryptHash } = JSON.parse(
                         content.value,
@@ -99,8 +100,6 @@ export async function extractDecryptedBeamReadableContent(
                         ciphertext: string;
                         dataToEncryptHash: string;
                       };
-                      // console.log('Decrypting blocks content...');
-                      // console.log({ ciphertext, dataToEncryptHash });
                       decryptedContent = await zulandLit.decryptString(
                         ciphertext,
                         dataToEncryptHash,
@@ -113,16 +112,6 @@ export async function extractDecryptedBeamReadableContent(
                         rawBlock: block,
                         error,
                       });
-                      // decryptedContent = encodeSlateToBase64([
-                      //   {
-                      //     type: 'paragraph',
-                      //     children: [
-                      //       {
-                      //         text: 'Unable to decrypt this content',
-                      //       },
-                      //     ],
-                      //   },
-                      // ]);
                       throw new Error('Unable to decrypt this block content');
                     } finally {
                       await zulandLit.disconnect();
