@@ -20,6 +20,7 @@ import {
 import { LIT_CHAINS } from '@lit-protocol/constants';
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 import { isAddress } from 'viem';
+import Link from 'next/link';
 
 interface CreateDiscussionModalProps {
   showModal: boolean;
@@ -210,6 +211,18 @@ export default function CreateDiscussionModal({
           }}
           spacing={2}
         >
+          {appAlreadyExists ? (
+            <Link href={`/events/${eventId}?tab=discussions`} target="_blank">
+              <ZuButton
+                sx={{
+                  width: '100%',
+                  fontSize: '18px',
+                }}
+              >
+                View Discussion
+              </ZuButton>
+            </Link>
+          ) : null}
           <Stack spacing={1}>
             <Typography fontSize={'18px'}>Display Name</Typography>
             <ZuInput
@@ -402,16 +415,18 @@ export default function CreateDiscussionModal({
           flexDirection: 'column',
         }}
       >
-        <ZuButton
-          sx={{
-            width: '100%',
-            fontSize: '18px',
-          }}
-          onClick={handleCreateDiscussion}
-          disabled={appAlreadyExists}
-        >
-          Create
-        </ZuButton>
+        <Stack spacing={1} width="100%">
+          <ZuButton
+            sx={{
+              width: '100%',
+              fontSize: '18px',
+            }}
+            onClick={handleCreateDiscussion}
+            disabled={appAlreadyExists}
+          >
+            Create
+          </ZuButton>
+        </Stack>
       </DialogActions>
     </Dialog>
   );
