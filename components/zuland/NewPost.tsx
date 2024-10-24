@@ -64,7 +64,11 @@ const NewPost: React.FC<NewPostProps> = ({
     }
     try {
       const editorsContent = editorBlockRef.current?.getAllContents() || [];
+      setErrorMessage('Encrypting post and publishing it to akasha...');
+      setShowErrorSnackbar(true);
       await createBeamPassingBlocks(editorsContent);
+      setErrorMessage('');
+      setShowErrorSnackbar(false);
       onPostCreated();
     } catch (error) {
       console.error('Error creating beam', error);

@@ -208,7 +208,6 @@ const EditorBox = forwardRef<EditorActions, EditorBoxProps>((props, ref) => {
           textContent,
           author: profileId,
         };
-        console.log('data', data);
 
         return data;
       },
