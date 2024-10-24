@@ -85,7 +85,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
     queryFn: async ({ pageParam }) => {
       if (!postId) return null;
       const reflections = await getTopReadableReflectionsByBeamId(postId, {
-        first: 1,
+        first: 3,
         after: pageParam,
       });
       pageParam = reflections?.reflections.pageInfo.endCursor ?? '';

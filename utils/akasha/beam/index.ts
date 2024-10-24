@@ -369,25 +369,24 @@ export async function getZulandReadableBeams(
     throw new Error('App not found');
   }
 
-  // retrieve all app versions
+  // retrieve all app versions and filter out null values
   const appVersions =
     zulandApp.releases?.edges
-      ?.map((edge) => edge?.node ?? null)
-      .filter((newEdge) => newEdge != null) ?? null;
+      ?.map((edge) => edge?.node)
+      .filter(
+        (version): version is NonNullable<typeof version> => version != null,
+      ) ?? [];
 
-  const readableBeams = await getReadableBeamsFromAppRelease(
-    appVersions ?? [],
-    {
-      filters: {
-        where: {
-          appID: {
-            equalTo: zulandApp.id,
-          },
+  const readableBeams = await getReadableBeamsFromAppRelease(appVersions, {
+    filters: {
+      where: {
+        appID: {
+          equalTo: zulandApp.id,
         },
       },
-      ...options,
     },
-  );
+    ...options,
+  });
   return readableBeams;
 }
 
