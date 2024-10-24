@@ -31,6 +31,7 @@ interface DiscussionsHomeProps {
   setSelectedSort: Dispatch<SetStateAction<string>>;
   loadMoreBeams: () => void;
   hasMoreBeams: boolean;
+  errorMessage?: string;
 }
 
 const DiscussionsHome = ({
@@ -42,6 +43,7 @@ const DiscussionsHome = ({
   setSelectedSort,
   loadMoreBeams,
   hasMoreBeams,
+  errorMessage,
 }: DiscussionsHomeProps) => {
   const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
 
@@ -164,6 +166,11 @@ const DiscussionsHome = ({
 
         {/* Posts */}
         <Stack direction="column" spacing="10px">
+          {errorMessage ? (
+            <Typography color="error" variant="h6" alignSelf="center">
+              {errorMessage}
+            </Typography>
+          ) : null}
           {posts.map((post) => (
             <PostCard key={post.id} {...post} />
           ))}

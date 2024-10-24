@@ -10,7 +10,11 @@ import DiscussionsHome from '@/components/zuland/DiscussionsHome';
 import PostDetails from '@/components/zuland/PostDetails';
 import NewPost from '@/components/zuland/NewPost';
 
-import { ZulandReadableBeam, getZulandReadableBeams } from '@/utils/akasha';
+import {
+  ZulandReadableBeam,
+  getZulandReadableBeams,
+  hasUserTicketPermissions,
+} from '@/utils/akasha';
 import { akashaBeamToMarkdown, Post } from '@/utils/akasha/beam-to-post';
 import Container from '@/components/zuland/Container';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -33,6 +37,7 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
   const [postId, setPostId] = useQueryState('postId', {
     defaultValue: '',
   });
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const {
     data: beamsData,
@@ -47,12 +52,27 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
       const zulandLit = new ZulandLit();
       await zulandLit.connect();
       await zulandLit.disconnect();
-      const readableBeams = await getZulandReadableBeams(eventId, {
-        first: 10,
-        after: pageParam,
-      });
-      pageParam = readableBeams.pageInfo.endCursor ?? '';
-      return readableBeams;
+
+      const isUserOkay = await hasUserTicketPermissions(eventId);
+      if (isUserOkay) {
+        const readableBeams = await getZulandReadableBeams(eventId, {
+          first: 10,
+          after: pageParam,
+        });
+        pageParam = readableBeams.pageInfo.endCursor ?? '';
+        return readableBeams;
+      } else {
+        setErrorMessage("You don't have permission to view this discussion");
+        return {
+          edges: [],
+          pageInfo: {
+            startCursor: null,
+            endCursor: null,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+        };
+      }
     },
     initialPageParam: '',
     getNextPageParam: (lastPage) =>
@@ -142,6 +162,7 @@ const Discussions: React.FC<DiscussionsProps> = ({ eventId }) => {
             setSelectedSort={setSelectedSort}
             loadMoreBeams={loadMoreBeams}
             hasMoreBeams={hasMoreBeams}
+            errorMessage={errorMessage}
           />
         )}
       </Stack>

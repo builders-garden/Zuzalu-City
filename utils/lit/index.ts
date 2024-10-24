@@ -4,7 +4,6 @@ import { AccessControlCondition } from './types';
 import {
   createSiweMessageWithRecaps,
   LitAbility,
-  LitActionResource,
   LitAccessControlConditionResource,
 } from '@lit-protocol/auth-helpers';
 
