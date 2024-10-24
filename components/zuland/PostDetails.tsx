@@ -356,8 +356,8 @@ const PostDetails: React.FC<PostDetailsProps> = ({
           {allReflections
             ? allReflections.map((reflection) => (
                 <CommentDetails
+                  key={`${reflection.id}-${reflection.createdAt}`}
                   eventId={eventId}
-                  key={reflection.id}
                   reflection={reflection}
                   onReplySubmit={handleReplySubmit}
                 />

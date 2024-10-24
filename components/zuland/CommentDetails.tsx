@@ -219,6 +219,7 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
                   color="#D7FFC4"
                 />
                 <CommentDetails
+                  key={`${childReflection.id}-${childReflection.createdAt}`}
                   eventId={eventId}
                   reflection={childReflection}
                   onReplySubmit={(content, topics) =>
