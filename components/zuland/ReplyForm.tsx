@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { Typography, Stack } from '@mui/material';
+import { Typography, Stack, Snackbar } from '@mui/material';
 import { ZuButton } from '@/components/core';
 
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
@@ -26,6 +26,8 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   replyingTo,
 }) => {
   const editorBlockRef = useRef<SlateEditorBlockRef>(null);
+  const [isPublishDisabled, setIsPublishDisabled] = useState(false);
+  const [showErrorSnackbar, setShowErrorSnackbar] = useState(false);
   const { currentAkashaUserStats } = useAkashaAuthStore();
   const { currentAkashaUser, loginAkasha } = useAkashaAuthStore();
 
@@ -37,8 +39,16 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   }, [currentAkashaUser]);
 
   const handleSubmit = () => {
+    if (isPublishDisabled) {
+      setShowErrorSnackbar(true);
+      return;
+    }
     const editorsContent = editorBlockRef.current?.getAllContents() || [];
     onReplySubmit(editorsContent, []);
+  };
+
+  const handleCloseSnackbar = () => {
+    setShowErrorSnackbar(false);
   };
 
   return (
@@ -53,6 +63,7 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
             <SlateEditorBlock
               authenticatedDID={currentAkashaUserStats.akashaProfile.did.id}
               ref={editorBlockRef}
+              onPublishDisabledChange={setIsPublishDisabled}
             />
           ) : null}
         </Stack>
@@ -95,6 +106,12 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
         </Stack>
       </Stack>
       <AkashaCreateProfileModal eventId={eventId} />
+      <Snackbar
+        open={showErrorSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message="There was an error with your reply. Please check your content and try again."
+      />
     </>
   );
 };

@@ -48,9 +48,9 @@ export default function CreateDiscussionModal({
   const [description, setDescription] = useState<string>(eventDescription);
 
   // nft gated
-  const [nftGated, setNftGated] = useState<boolean>(false);
+  const [nftGated, setNftGated] = useState<boolean>(true);
   const [contractAddress, setContractAddress] = useState<string>('');
-  const [chainName, setChainName] = useState<string>('Ethereum');
+  const [chainName, setChainName] = useState<string>('ethereum');
   const [functionName, setFunctionName] = useState<string>('balanceOf');
   // const [functionParams, setFunctionParams] = useState<string>(':userAddress');
 
@@ -133,19 +133,20 @@ export default function CreateDiscussionModal({
           description: description,
         });
         if (createAppResult) {
-          const createAppReleaseResult = await createZulandAppRelease({
+          await createZulandAppRelease({
             applicationID: createAppResult?.document.id,
             version: '0.0.2',
             source: `https://zuzalu.city/events/${eventId}`,
-            ticketRequirements: {
-              contractAddress: contractAddress, // ?? '0xAe8ccE7d5aF9D7f2A0e2295b7F2e53f249E9cAdE',
-              chain: chainName, // ?? 'sepolia',
-              method: functionName, // ?? 'balanceOf',
-              comparator: comparator, // ?? '>',
-              value: comparisonValue, // ?? '0',
-            },
+            ticketRequirements: nftGated
+              ? {
+                  contractAddress: contractAddress,
+                  chain: chainName,
+                  method: functionName,
+                  comparator: comparator,
+                  value: comparisonValue,
+                }
+              : undefined,
           });
-          console.log('createAppReleaseResult', createAppReleaseResult);
           showToast(
             `Successfully created Akasha discussion for "${eventName}"`,
             'success',

@@ -8,7 +8,13 @@ import {
   encodeSlateToBase64,
 } from '@/utils/akasha';
 
-import { Typography, TextField, Stack, InputAdornment } from '@mui/material';
+import {
+  Typography,
+  TextField,
+  Stack,
+  InputAdornment,
+  Snackbar,
+} from '@mui/material';
 import { ZuButton } from '@/components/core';
 import AkashaCreateProfileModal from '@/components/modals/Zuland/AkashaCreateProfileModal';
 import TopicList from './TopicList';
@@ -32,8 +38,10 @@ const NewPost: React.FC<NewPostProps> = ({
     useState(false);
   const [title, setTitle] = useState('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-
+  const [isPublishDisabled, setIsPublishDisabled] = useState(false);
   const MAX_TITLE_LENGTH = 300;
+  const [showErrorSnackbar, setShowErrorSnackbar] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const editorBlockRef = useRef<SlateEditorBlockRef>(null);
 
@@ -50,14 +58,29 @@ const NewPost: React.FC<NewPostProps> = ({
       setReopenCreateProfileModal(true);
       return;
     }
+    if (isPublishDisabled) {
+      setErrorMessage(
+        "There's an issue with your post content. Please check and try again.",
+      );
+      setShowErrorSnackbar(true);
+      return;
+    }
     try {
       const editorsContent = editorBlockRef.current?.getAllContents() || [];
       await createBeamPassingBlocks(editorsContent);
       onPostCreated();
     } catch (error) {
       console.error('Error creating beam', error);
+      setErrorMessage(
+        'An error occurred while creating your post. Please try again.',
+      );
+      setShowErrorSnackbar(true);
       onCancel();
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setShowErrorSnackbar(false);
   };
 
   async function createBeamPassingBlocks(editorContents: IPublishData[]) {
@@ -145,6 +168,7 @@ const NewPost: React.FC<NewPostProps> = ({
             <SlateEditorBlock
               authenticatedDID={currentAkashaUserStats.akashaProfile.did.id}
               ref={editorBlockRef}
+              onPublishDisabledChange={setIsPublishDisabled}
             />
           ) : null}
         </Stack>
@@ -154,7 +178,7 @@ const NewPost: React.FC<NewPostProps> = ({
             variant="contained"
             color="primary"
             onClick={handleSubmit}
-            disabled={!title}
+            disabled={!title || isPublishDisabled}
             sx={{
               color: '#D7FFC4',
               backgroundColor: 'rgba(215, 255, 196, 0.2)',
@@ -176,6 +200,12 @@ const NewPost: React.FC<NewPostProps> = ({
       <AkashaCreateProfileModal
         eventId={eventId}
         reOpen={reopenCreateProfileModal}
+      />
+      <Snackbar
+        open={showErrorSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={errorMessage}
       />
     </>
   );

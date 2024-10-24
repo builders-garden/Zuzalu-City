@@ -35,7 +35,8 @@ const AkashaCreateProfileModal = ({
   const MAX_LINKS = 5;
 
   const { username } = useCeramicContext();
-  const { currentAkashaUser, currentAkashaUserStats } = useAkashaAuthStore();
+  const { currentAkashaUser, currentAkashaUserStats, loadAkashaProfile } =
+    useAkashaAuthStore();
 
   const [openModal, setOpenModal] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -83,6 +84,8 @@ const AkashaCreateProfileModal = ({
         name: profileName,
         description: profileDescription,
         links: links.map((link) => ({ href: link.url, label: null })),
+      }).then(() => {
+        loadAkashaProfile();
       });
       setResultMessage(`Akasha profile created, ${profileName}!`);
     } catch (error) {

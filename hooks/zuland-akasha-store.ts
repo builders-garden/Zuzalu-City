@@ -9,6 +9,7 @@ interface AkashaAuthState {
   } | null;
   currentAkashaUserStats: AkashaProfileStats | null | undefined;
   loginAkasha: () => Promise<void>;
+  loadAkashaProfile: () => Promise<void>;
 }
 
 export const useAkashaAuthStore = create<AkashaAuthState>((set, get) => ({
@@ -36,5 +37,15 @@ export const useAkashaAuthStore = create<AkashaAuthState>((set, get) => ({
     } catch (error) {
       console.error('Error logging in to Akasha', error);
     }
+  },
+  loadAkashaProfile: async () => {
+    const { currentAkashaUser } = get();
+    const akashaProfileData = await getProfileStatsByDid(
+      currentAkashaUser?.id ?? '',
+    );
+    console.log('loadAkashaProfile', akashaProfileData);
+    set({
+      currentAkashaUserStats: akashaProfileData,
+    });
   },
 }));

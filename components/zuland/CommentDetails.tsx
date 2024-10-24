@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
@@ -41,9 +41,6 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const replyFormRef = useRef<HTMLDivElement>(null);
-  const [childReflections, setChildReflections] = useState<
-    ZulandReadableReflection[]
-  >([]);
 
   const {
     data: childReflectionsData,
@@ -78,14 +75,13 @@ const CommentDetails: React.FC<CommentDetailsProps> = ({
       lastPage.pageInfo?.hasNextPage ? lastPage.pageInfo.endCursor : undefined,
   });
 
-  useEffect(() => {
-    if (childReflectionsData) {
-      const allChildReflections = childReflectionsData.pages.flatMap((page) =>
+  const childReflections = useMemo(
+    () =>
+      childReflectionsData?.pages.flatMap((page) =>
         page.edge.map((edge) => edge.node),
-      );
-      setChildReflections(allChildReflections);
-    }
-  }, [childReflectionsData]);
+      ),
+    [childReflectionsData],
+  );
 
   const handleReplyClick = () => {
     setShowReplyForm(true);

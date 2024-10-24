@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 
 import {
@@ -89,6 +89,7 @@ const PostDetails: React.FC<PostDetailsProps> = ({
         after: pageParam,
       });
       pageParam = reflections?.reflections.pageInfo.endCursor ?? '';
+      setReflectionCount(reflections?.reflectionsCount ?? 0);
       return reflections;
     },
     initialPageParam: '',
@@ -98,21 +99,18 @@ const PostDetails: React.FC<PostDetailsProps> = ({
         : undefined,
   });
 
-  useEffect(() => {
-    if (reflectionsData) {
-      const reflectionsCount = reflectionsData.pages[0]?.reflectionsCount ?? 0;
-      const allReflections = reflectionsData.pages.flatMap(
+  const allReflections = useMemo(
+    () =>
+      reflectionsData?.pages.flatMap(
         (page) =>
           page?.reflections.edges
             .map((edge) => edge?.node)
             .filter(
               (node): node is ZulandReadableReflection => node !== null,
             ) ?? [],
-      );
-      setReflections(allReflections);
-      setReflectionCount(reflectionsCount);
-    }
-  }, [reflectionsData]);
+      ),
+    [reflectionsData],
+  );
 
   useEffect(() => {
     const sortedReflections = reflections.sort((a, b) => {
@@ -355,14 +353,16 @@ const PostDetails: React.FC<PostDetailsProps> = ({
 
         {/* Existing replies */}
         <Stack spacing={3}>
-          {reflections.map((reflection) => (
-            <CommentDetails
-              eventId={eventId}
-              key={reflection.id}
-              reflection={reflection}
-              onReplySubmit={handleReplySubmit}
-            />
-          ))}
+          {allReflections
+            ? allReflections.map((reflection) => (
+                <CommentDetails
+                  eventId={eventId}
+                  key={reflection.id}
+                  reflection={reflection}
+                  onReplySubmit={handleReplySubmit}
+                />
+              ))
+            : null}
         </Stack>
 
         {/* Pagination */}

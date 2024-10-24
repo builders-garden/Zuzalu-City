@@ -16,6 +16,7 @@ import { TrashcanIcon } from '@/components/icons';
 
 interface SlateEditorBlockProps {
   authenticatedDID: string;
+  onPublishDisabledChange?: (isDisabled: boolean) => void;
 }
 
 export type SlateEditorBlockRef = {
@@ -25,9 +26,10 @@ export type SlateEditorBlockRef = {
 export const SlateEditorBlock = forwardRef<
   SlateEditorBlockRef,
   SlateEditorBlockProps
->(({ authenticatedDID }, ref) => {
+>(({ authenticatedDID, onPublishDisabledChange }, ref) => {
   const editorBlockRef = useRef<EditorActions[]>([]);
 
+  const [isPublishDisabled, setIsPublishDisabled] = useState(false);
   const [editors, setEditors] = useState<
     {
       key: number;
@@ -65,6 +67,11 @@ export const SlateEditorBlock = forwardRef<
     setEditors((prevEditors) => prevEditors.filter((p) => p.key !== key));
   };
 
+  const handleDisablePublish = (disabled: boolean) => {
+    setIsPublishDisabled(disabled);
+    onPublishDisabledChange?.(disabled);
+  };
+
   useImperativeHandle(
     ref,
     () => ({
@@ -96,7 +103,7 @@ export const SlateEditorBlock = forwardRef<
             showCancelButton={false}
             initialEditorValue={undefined}
             editorActionsRef={editor.ref}
-            handleDisablePublish={() => false}
+            handleDisablePublish={handleDisablePublish}
             encodingFunction={encodeSlateToBase64}
             onPublish={onPublish}
             ref={(el) => {

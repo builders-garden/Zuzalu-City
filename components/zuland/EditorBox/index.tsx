@@ -173,7 +173,7 @@ const EditorBox = forwardRef<EditorActions, EditorBoxProps>((props, ref) => {
         editor.insertText('\n');
       },
       getContent: () => {
-        const slateContent = editor.children;
+        const slateContent = editor.children.slice(0, MAX_TEXT_LENGTH);
 
         const metadata: IMetadata = {
           app: publishingApp,
