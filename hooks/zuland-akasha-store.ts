@@ -7,9 +7,14 @@ interface AkashaAuthState {
     ethAddress?: string;
     isNewUser: boolean;
   } | null;
-  currentAkashaUserStats: AkashaProfileStats | null | undefined;
+  currentAkashaUserStats:
+    | AkashaProfileStats['akashaProfile']
+    | null
+    | undefined;
   loginAkasha: () => Promise<void>;
-  loadAkashaProfile: () => Promise<void>;
+  setAkashaUserStats: (
+    akashaProfile: AkashaProfileStats['akashaProfile'],
+  ) => Promise<void>;
 }
 
 export const useAkashaAuthStore = create<AkashaAuthState>((set, get) => ({
@@ -32,20 +37,17 @@ export const useAkashaAuthStore = create<AkashaAuthState>((set, get) => ({
 
       set({
         currentAkashaUser: authRes.data,
-        currentAkashaUserStats: akashaProfileData,
+        currentAkashaUserStats: akashaProfileData?.akashaProfile,
       });
     } catch (error) {
       console.error('Error logging in to Akasha', error);
     }
   },
-  loadAkashaProfile: async () => {
-    const { currentAkashaUser } = get();
-    const akashaProfileData = await getProfileStatsByDid(
-      currentAkashaUser?.id ?? '',
-    );
-    console.log('loadAkashaProfile', akashaProfileData);
+  setAkashaUserStats: async (
+    akashaProfile: AkashaProfileStats['akashaProfile'],
+  ) => {
     set({
-      currentAkashaUserStats: akashaProfileData,
+      currentAkashaUserStats: akashaProfile,
     });
   },
 }));

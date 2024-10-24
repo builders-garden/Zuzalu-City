@@ -51,10 +51,7 @@ const NewPost: React.FC<NewPostProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (
-      currentAkashaUser &&
-      (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile)
-    ) {
+    if (currentAkashaUser && !currentAkashaUserStats) {
       setReopenCreateProfileModal(true);
       return;
     }
@@ -164,9 +161,9 @@ const NewPost: React.FC<NewPostProps> = ({
 
         <Stack spacing={1}>
           <Typography variant="body1">Compose your post</Typography>
-          {currentAkashaUserStats?.akashaProfile?.did ? (
+          {currentAkashaUserStats?.did ? (
             <SlateEditorBlock
-              authenticatedDID={currentAkashaUserStats.akashaProfile.did.id}
+              authenticatedDID={currentAkashaUserStats.did.id}
               ref={editorBlockRef}
               onPublishDisabledChange={setIsPublishDisabled}
             />

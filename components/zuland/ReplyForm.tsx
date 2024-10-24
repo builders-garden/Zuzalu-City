@@ -59,9 +59,9 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
         </Typography>
         <Stack spacing={1}>
           <Typography variant="body1">Compose your reply</Typography>
-          {currentAkashaUserStats?.akashaProfile?.did ? (
+          {currentAkashaUserStats?.did ? (
             <SlateEditorBlock
-              authenticatedDID={currentAkashaUserStats.akashaProfile.did.id}
+              authenticatedDID={currentAkashaUserStats.did.id}
               ref={editorBlockRef}
               onPublishDisabledChange={setIsPublishDisabled}
             />

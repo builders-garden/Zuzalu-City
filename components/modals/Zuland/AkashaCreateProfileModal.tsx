@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useCeramicContext } from '@/context/CeramicContext';
 import { useAkashaAuthStore } from '@/hooks/zuland-akasha-store';
 
-import { createZulandProfile } from '@/utils/akasha';
+import { AkashaProfileStats, createZulandProfile } from '@/utils/akasha';
 
 import {
   Modal,
@@ -35,7 +35,7 @@ const AkashaCreateProfileModal = ({
   const MAX_LINKS = 5;
 
   const { username } = useCeramicContext();
-  const { currentAkashaUser, currentAkashaUserStats, loadAkashaProfile } =
+  const { currentAkashaUser, currentAkashaUserStats, setAkashaUserStats } =
     useAkashaAuthStore();
 
   const [openModal, setOpenModal] = useState(false);
@@ -49,12 +49,10 @@ const AkashaCreateProfileModal = ({
   const [resultMessage, setResultMessage] = useState('');
 
   useEffect(() => {
-    if (
-      currentAkashaUser &&
-      (!currentAkashaUserStats || !currentAkashaUserStats.akashaProfile)
-    ) {
+    if (currentAkashaUser && !currentAkashaUserStats) {
       setOpenModal(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -80,13 +78,13 @@ const AkashaCreateProfileModal = ({
       return;
     }
     try {
-      await createZulandProfile(eventId, {
+      const result = await createZulandProfile(eventId, {
         name: profileName,
         description: profileDescription,
         links: links.map((link) => ({ href: link.url, label: null })),
-      }).then(() => {
-        loadAkashaProfile();
       });
+      console.log('handleCreateProfile result', result);
+      setAkashaUserStats(result as AkashaProfileStats['akashaProfile']);
       setResultMessage(`Akasha profile created, ${profileName}!`);
     } catch (error) {
       console.error(`Error creating Akasha profile`, error);
