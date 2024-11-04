@@ -103,8 +103,12 @@ export default function CreateDiscussionModal({
   }, [currentAkashaUser, loginAkasha]);
 
   const handleCreateDiscussion = async () => {
-    if (!contractAddress || !isAddress(contractAddress)) {
+    if (nftGated && (!contractAddress || !isAddress(contractAddress))) {
       showToast('Please enter a valid contract address', 'error');
+      return;
+    }
+    if (nftGated && (!functionName || !comparator || !comparisonValue)) {
+      showToast('Please enter valid contract details', 'error');
       return;
     }
     if (!chainName) {
@@ -113,10 +117,6 @@ export default function CreateDiscussionModal({
     }
     if (!displayName) {
       showToast('Please enter a display name', 'error');
-      return;
-    }
-    if (!functionName || !comparator || !comparisonValue) {
-      showToast('Please enter valid contract details', 'error');
       return;
     }
 

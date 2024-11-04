@@ -76,7 +76,7 @@ export async function createZulandAppRelease(
             value: params.ticketRequirements.value || '0',
           },
         })
-      : '',
+      : 'content-not-encrypted',
     provider: '@bg/zuland',
   };
 
